@@ -142,13 +142,28 @@ export default function DashboardPage() {
 }
 
 function StatCard({ icon, label, value, iconBg }: { icon: React.ReactNode, label: string, value: string, iconBg: string }) {
+    // Map iconBg to a hover glow color
+    const glowMap: Record<string, string> = {
+        'bg-yellow-100': 'rgba(234,179,8,0.18)',
+        'bg-[#f0e6e1]': 'rgba(142,82,51,0.18)',
+        'bg-blue-100': 'rgba(59,130,246,0.18)',
+        'bg-purple-100': 'rgba(168,85,247,0.18)',
+    };
+    const glowColor = glowMap[iconBg] || 'rgba(0,0,0,0.08)';
+
     return (
         <motion.div
-            whileHover={{ y: -5, scale: 1.02 }}
-            transition={{ type: "spring", stiffness: 300 }}
-            className="bg-white/80 backdrop-blur-xl rounded-[1.5rem] lg:rounded-3xl p-4 lg:p-6 shadow-[0_10px_30px_rgba(0,0,0,0.02)] border-2 border-white cursor-pointer"
+            whileHover={{ y: -6, scale: 1.03, boxShadow: `0 20px 50px ${glowColor}` }}
+            transition={{ type: "spring", stiffness: 400, damping: 20 }}
+            className="relative overflow-hidden bg-gradient-to-br from-white via-white to-gray-50/80 backdrop-blur-xl rounded-[1.5rem] lg:rounded-3xl p-4 lg:p-6 border border-gray-100/80 cursor-pointer"
+            style={{
+                boxShadow: '0 4px 6px rgba(0,0,0,0.04), 0 10px 24px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.03)',
+            }}
         >
-            <div className={`w-10 h-10 lg:w-12 lg:h-12 rounded-[1rem] lg:rounded-2xl ${iconBg} flex items-center justify-center mb-3 lg:mb-4 shadow-sm`}>
+            {/* Subtle decorative shimmer */}
+            <div className="absolute -top-12 -right-12 w-28 h-28 rounded-full bg-gradient-to-br from-white/60 to-transparent blur-2xl pointer-events-none"></div>
+
+            <div className={`w-10 h-10 lg:w-12 lg:h-12 rounded-[1rem] lg:rounded-2xl ${iconBg} flex items-center justify-center mb-3 lg:mb-4`} style={{ boxShadow: 'inset 0 -2px 4px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.06)' }}>
                 {icon}
             </div>
             <div className="text-[8px] lg:text-[10px] font-bold text-brand-text/50 tracking-widest uppercase mb-0.5 lg:mb-1">{label}</div>
