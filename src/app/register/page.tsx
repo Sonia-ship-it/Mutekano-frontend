@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Mail, Lock, Eye, ArrowRight, Loader2 } from 'lucide-react';
+import { Mail, Lock, Eye, ArrowRight, Loader2, User } from 'lucide-react';
 import AuthLayout from '@/components/AuthLayout';
 import { TextInput, Button } from '@/components/ui/FormElements';
 
@@ -25,21 +25,31 @@ export default function RegisterPage() {
             subtitleBlock1="GUKURIKIRANA"
             subtitleBlock2="URUGO"
             subtitleBlock3="AHO URI HOSE"
+            formMaxWidth="600px"
         >
             <div className="flex flex-col h-full">
-                <div className="mb-8 lg:mb-10">
-                    <h2 className="text-3xl lg:text-[2.5rem] font-black text-brand-brown tracking-tight leading-none mb-2">Fungura konti</h2>
+                <div className="mb-6">
+                    <h2 className="text-3xl lg:text-[2.5rem] font-black text-brand-brown tracking-tight leading-none mb-1">Fungura konti</h2>
                     <p className="text-brand-text/60 font-medium text-sm lg:text-base">Iyandikishe maze ufungure konti.</p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="flex-1 flex flex-col pt-2 border-t border-brand-text/5">
+                    <TextInput
+                        label="Amazina"
+                        type="text"
+                        required
+                        placeholder="Izina ryawe ryuzuye"
+                        icon={User}
+                        className="mb-3 mt-3"
+                    />
+
                     <TextInput
                         label="Imeri"
                         type="email"
                         required
                         placeholder="izina@urubuga.rw"
                         icon={Mail}
-                        className="mb-5 lg:mb-6 mt-4 lg:mt-6"
+                        className="mb-3"
                     />
 
                     <TextInput
@@ -49,15 +59,24 @@ export default function RegisterPage() {
                         placeholder="........"
                         icon={Lock}
                         rightIcon={<Eye size={18} strokeWidth={2} />}
-                        className="mb-6 lg:mb-8"
+                        className="mb-3"
+                    />
+
+                    <TextInput
+                        label="Subira Ijambo ry'ibanga"
+                        type="password"
+                        required
+                        placeholder="........"
+                        icon={Lock}
+                        className="mb-5"
                     />
 
                     <Button type="submit" disabled={isLoading} rightIcon={isLoading ? <Loader2 size={18} className="animate-spin" /> : <ArrowRight size={18} />}>
                         {isLoading ? "IYANDIKISHE..." : "INJIRA MURI KONTI?"}
                     </Button>
 
-                    <div className="my-6 lg:my-8 border-t border-brand-text/10 w-full relative">
-                        <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-transparent px-2 text-[10px] text-brand-text/30 font-bold">CYANGWA</span>
+                    <div className="my-4 border-t border-brand-text/10 w-full relative">
+                        <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white/0 px-2 text-[10px] text-brand-text/30 font-bold">CYANGWA</span>
                     </div>
 
                     <Button variant="google" type="button" rightIcon={
@@ -68,7 +87,7 @@ export default function RegisterPage() {
                         KOMEZA NA GOOGLE
                     </Button>
 
-                    <div className="mt-8 lg:mt-10 text-center text-[10px] lg:text-xs font-bold text-brand-text/60 tracking-widest uppercase">
+                    <div className="mt-4 text-center text-[10px] lg:text-xs font-bold text-brand-text/60 tracking-widest uppercase">
                         USANZWE UFITE KONTI? <Link href="/login" className="text-brand-brown hover:underline underline-offset-4">INJIRA</Link>
                     </div>
                 </form>

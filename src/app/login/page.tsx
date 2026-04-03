@@ -25,6 +25,7 @@ export default function LoginPage() {
             subtitleBlock1="GUKURIKIRANA"
             subtitleBlock2="UBUHINZI"
             subtitleBlock3="N'UBWOROZI."
+            formMaxWidth="600px"
         >
             <div className="flex flex-col h-full">
                 <div className="mb-8 lg:mb-10">
@@ -44,7 +45,7 @@ export default function LoginPage() {
 
                     <TextInput
                         label="Ijambo ry'ibanga"
-                        rightLabel="WIBAGIWE?"
+                        rightLabel={<Link href="/forgot-password" className="text-[10px] font-bold text-brand-brown tracking-widest uppercase hover:underline underline-offset-4">WIBAGIWE?</Link>}
                         type="password"
                         placeholder="........"
                         required
