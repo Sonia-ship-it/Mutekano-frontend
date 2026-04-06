@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, Variants } from 'framer-motion';
 import {
     Shield, Video, Bell, Battery, Camera, Database, Activity, Wifi, ChevronRight
@@ -8,6 +8,27 @@ import {
 import TopNavbar from '@/components/layout/TopNavbar';
 
 export default function DashboardPage() {
+    const [currentUser, setCurrentUser] = useState<any>(null);
+
+    useEffect(() => {
+        const fetchUser = async () => {
+            const token = localStorage.getItem('access_token');
+            if (!token) return;
+            try {
+                const res = await fetch('http://147.79.101.43:8000/users/me', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (data.success && data.data) {
+                    setCurrentUser(data.data);
+                }
+            } catch (err) {
+                console.error("Failed to fetch user", err);
+            }
+        };
+        fetchUser();
+    }, []);
+
     const containerVariants: Variants = {
         hidden: { opacity: 0 },
         show: {
@@ -22,6 +43,8 @@ export default function DashboardPage() {
         hidden: { opacity: 0, y: 20 },
         show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
     };
+
+    const firstName = currentUser ? currentUser.first_name : 'Urunjiwe';
 
     return (
         <div className="min-h-screen bg-white font-sans pb-12 overflow-x-hidden">
@@ -40,7 +63,7 @@ export default function DashboardPage() {
                 <motion.div variants={itemVariants} className="flex flex-col md:flex-row md:justify-between md:items-end mb-6 lg:mb-8 gap-4">
                     <div>
                         <h1 className="text-4xl lg:text-5xl font-black text-brand-text tracking-tight mb-2">
-                            <span className="font-extrabold text-brand-text/80">Muraho, </span>Diana
+                            <span className="font-extrabold text-brand-text/80">Muraho, </span>{firstName}
                         </h1>
                         <div className="flex items-center gap-2 mt-2 lg:mt-3 bg-white/50 w-max px-3 py-1.5 rounded-full border border-brand-text/5">
                             <div className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>

@@ -3,21 +3,77 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Mail, Lock, Eye, ArrowRight, Loader2, User } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2, User, Phone } from 'lucide-react';
 import AuthLayout from '@/components/AuthLayout';
 import { TextInput, Button } from '@/components/ui/FormElements';
 
 export default function RegisterPage() {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
+    const [errorMsg, setErrorMsg] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [formData, setFormData] = useState({
+        fullNames: '',
+        email: '',
+        phoneNumber: '',
+        password: '',
+    });
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setFormData({
+            ...formData,
+            [e.target.name]: e.target.value
+        });
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
-        // Simulate sign-up delay then move to setup
-        setTimeout(() => {
-            router.push('/setup');
-        }, 1200);
+        setErrorMsg('');
+
+        // Split full names into first and last name
+        const names = formData.fullNames.trim().split(' ');
+        const firstName = names[0] || '';
+        const lastName = names.slice(1).join(' ') || firstName; // Fallback to first name if no last name
+
+        try {
+            const response = await fetch('http://147.79.101.43:8000/auth/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    first_name: firstName,
+                    last_name: lastName,
+                    email: formData.email,
+                    phone_number: formData.phoneNumber,
+                    password: formData.password,
+                    role: "CLIENT"
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                // Handle different error structures
+                if (data.detail && Array.isArray(data.detail)) {
+                    throw new Error(data.detail.map((err: any) => err.msg).join(', '));
+                }
+                throw new Error("Kwiyandikisha byanze. Kanda wiyandikishe bundi bushya.");
+            }
+
+            if (data.success) {
+                // On success, redirect to login page or setup
+                router.push('/login');
+            } else {
+                throw new Error("Habaye ikibazo mugufungura konti. Ongera ugerageze.");
+            }
+
+        } catch (error: any) {
+            setErrorMsg(error.message);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -34,40 +90,61 @@ export default function RegisterPage() {
                 </div>
 
                 <form onSubmit={handleSubmit} className="flex-1 flex flex-col pt-2 border-t border-brand-text/5">
+                    {errorMsg && (
+                        <div className="p-3 mb-4 text-sm text-red-500 bg-red-50 rounded-lg">
+                            {errorMsg}
+                        </div>
+                    )}
                     <TextInput
+                        name="fullNames"
                         label="Amazina"
                         type="text"
                         required
                         placeholder="Izina ryawe ryuzuye"
                         icon={User}
+                        value={formData.fullNames}
+                        onChange={handleChange}
                         className="mb-3 mt-3"
                     />
 
                     <TextInput
+                        name="email"
                         label="Imeri"
                         type="email"
                         required
                         placeholder="izina@urubuga.rw"
                         icon={Mail}
+                        value={formData.email}
+                        onChange={handleChange}
                         className="mb-3"
                     />
 
                     <TextInput
+                        name="phoneNumber"
+                        label="Nomero ya telefone"
+                        type="tel"
+                        required
+                        placeholder="07..."
+                        icon={Phone}
+                        value={formData.phoneNumber}
+                        onChange={handleChange}
+                        className="mb-3"
+                    />
+
+                    <TextInput
+                        name="password"
                         label="Ijambo ry'ibanga"
-                        type="password"
+                        type={showPassword ? "text" : "password"}
                         required
                         placeholder="........"
                         icon={Lock}
-                        rightIcon={<Eye size={18} strokeWidth={2} />}
-                        className="mb-3"
-                    />
-
-                    <TextInput
-                        label="Subira Ijambo ry'ibanga"
-                        type="password"
-                        required
-                        placeholder="........"
-                        icon={Lock}
+                        rightIcon={
+                            <div onClick={() => setShowPassword(!showPassword)} className="p-1 cursor-pointer">
+                                {showPassword ? <EyeOff size={18} strokeWidth={2} /> : <Eye size={18} strokeWidth={2} />}
+                            </div>
+                        }
+                        value={formData.password}
+                        onChange={handleChange}
                         className="mb-5"
                     />
 
@@ -95,3 +172,4 @@ export default function RegisterPage() {
         </AuthLayout>
     );
 }
+

@@ -3,21 +3,89 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Mail, Lock, Eye, ArrowRight, Loader2 } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2, User } from 'lucide-react';
 import AuthLayout from '@/components/AuthLayout';
 import { TextInput, Button } from '@/components/ui/FormElements';
 
 export default function LoginPage() {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
+    const [errorMsg, setErrorMsg] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [formData, setFormData] = useState({
+        identifier: '',
+        password: '',
+    });
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setFormData({
+            ...formData,
+            [e.target.name]: e.target.value
+        });
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
-        // Simulate login delay for UX animation
-        setTimeout(() => {
-            router.push('/dashboard');
-        }, 1200);
+        setErrorMsg('');
+
+        try {
+            const response = await fetch('http://147.79.101.43:8000/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    identifier: formData.identifier,
+                    password: formData.password,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                // Handle different error structures
+                if (data.detail && Array.isArray(data.detail)) {
+                    throw new Error(data.detail.map((err: any) => err.msg).join(', '));
+                }
+                throw new Error("Imyirondoro wanditse s'iyo, ongera ugerageze.");
+            }
+
+            if (data.success && data.data) {
+                const accessToken = data.data.access_token;
+                // On success, store token in local storage
+                localStorage.setItem('access_token', accessToken);
+                if (data.data.refresh_token) {
+                    localStorage.setItem('refresh_token', data.data.refresh_token);
+                }
+
+                // Fetch user profile to determine role
+                const userResponse = await fetch('http://147.79.101.43:8000/users/me', {
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`
+                    }
+                });
+                const userData = await userResponse.json();
+
+                if (userData.success && userData.data) {
+                    localStorage.setItem('cached_user_profile', JSON.stringify(userData.data));
+                    if (userData.data.role === 'ADMIN') {
+                        router.push('/admin/users');
+                    } else {
+                        router.push('/dashboard');
+                    }
+                } else {
+                    router.push('/dashboard');
+                }
+            } else {
+                throw new Error("Kwinjira byanze, ongera ugerageze.");
+            }
+
+        } catch (error: any) {
+            setErrorMsg(error.message || "Habaye ikibazo, ongera ugerageze ikindi gihe.");
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -34,23 +102,38 @@ export default function LoginPage() {
                 </div>
 
                 <form onSubmit={handleSubmit} className="flex-1 flex flex-col pt-2 border-t border-brand-text/5">
+                    {errorMsg && (
+                        <div className="p-3 mb-4 text-sm text-red-500 bg-red-50 rounded-lg">
+                            {errorMsg}
+                        </div>
+                    )}
                     <TextInput
-                        label="Imeri"
-                        type="email"
-                        placeholder="izina@urubuga.rw"
+                        name="identifier"
+                        label="Imeri cyangwa nomero ya telefone"
+                        type="text"
+                        placeholder="izina@urubuga.rw cyangwa 07..."
                         required
-                        icon={Mail}
+                        icon={User}
+                        value={formData.identifier}
+                        onChange={handleChange}
                         className="mb-5 lg:mb-6 mt-4 lg:mt-6"
                     />
 
                     <TextInput
+                        name="password"
                         label="Ijambo ry'ibanga"
                         rightLabel={<Link href="/forgot-password" className="text-[10px] font-bold text-brand-brown tracking-widest uppercase hover:underline underline-offset-4">WIBAGIWE?</Link>}
-                        type="password"
+                        type={showPassword ? "text" : "password"}
                         placeholder="........"
                         required
                         icon={Lock}
-                        rightIcon={<Eye size={18} strokeWidth={2} />}
+                        rightIcon={
+                            <div onClick={() => setShowPassword(!showPassword)} className="p-1">
+                                {showPassword ? <EyeOff size={18} strokeWidth={2} /> : <Eye size={18} strokeWidth={2} />}
+                            </div>
+                        }
+                        value={formData.password}
+                        onChange={handleChange}
                         className="mb-6 lg:mb-8"
                     />
 

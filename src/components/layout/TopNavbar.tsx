@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -13,6 +13,34 @@ export default function TopNavbar() {
     const router = useRouter();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+    const [currentUser, setCurrentUser] = useState<any>(null);
+
+    useEffect(() => {
+        const cachedUser = localStorage.getItem('cached_user_profile');
+        if (cachedUser) {
+            try {
+                setCurrentUser(JSON.parse(cachedUser));
+            } catch (e) { }
+        }
+
+        const fetchUser = async () => {
+            const token = localStorage.getItem('access_token');
+            if (!token) return;
+            try {
+                const res = await fetch('http://147.79.101.43:8000/users/me', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (data.success && data.data) {
+                    setCurrentUser(data.data);
+                    localStorage.setItem('cached_user_profile', JSON.stringify(data.data));
+                }
+            } catch (err) {
+                console.error("Failed to fetch user in nav", err);
+            }
+        };
+        fetchUser();
+    }, []);
 
     const notifications = [
         { id: 1, title: "Umuntu ku irembo rikuru", time: "Minota 5 ishize", type: "alert" },
@@ -26,6 +54,10 @@ export default function TopNavbar() {
         { name: 'Amashusho', path: '/history', icon: Clock },
         { name: 'Igenamiterere', path: '/settings', icon: Settings },
     ];
+
+    const fullName = currentUser ? `${currentUser.first_name || ''} ${currentUser.last_name || ''}`.trim() : '...';
+    const avatarName = currentUser ? `${currentUser.first_name || 'U'} ${currentUser.last_name || ''}` : 'U';
+    const rolePlan = currentUser?.role === 'ADMIN' ? '✨ ADMIN PLAN' : '✨ PRO PLAN';
 
     return (
         <>
@@ -104,24 +136,31 @@ export default function TopNavbar() {
                         </AnimatePresence>
                     </div>
 
-                    <div className="flex items-center gap-3 ml-4 cursor-pointer hover:opacity-80 transition-opacity">
+                    <Link href="/settings?tab=profile" className="flex items-center gap-3 ml-4 cursor-pointer hover:opacity-80 transition-opacity">
                         <div className="flex flex-col items-end">
-                            <span className="text-sm font-bold">Diana Ishimwe</span>
-                            <span className="text-[10px] text-brand-brown bg-yellow-100 rounded-full px-2 py-0.5 font-bold flex items-center gap-1">
-                                ✨ PRO PLAN
-                            </span>
+                            <span className="text-sm font-bold">{fullName}</span>
                         </div>
                         <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/20 bg-brand-brown-dark shadow-inner">
-                            <img src="https://ui-avatars.com/api/?name=Diana+Ishimwe&background=random" alt="Diana" className="w-full h-full object-cover" />
+                            <img
+                                src={currentUser?.profile_image ? (currentUser.profile_image.startsWith('http') ? currentUser.profile_image : `http://147.79.101.43:8000${currentUser.profile_image.startsWith('/') ? '' : '/'}${currentUser.profile_image}`) : `https://ui-avatars.com/api/?name=${encodeURIComponent(avatarName)}&background=8c4b2c&color=ffffff`}
+                                alt="User"
+                                className="w-full h-full object-cover"
+                                onError={(e) => { e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(avatarName)}&background=8c4b2c&color=ffffff`; }}
+                            />
                         </div>
-                    </div>
+                    </Link>
                 </div>
 
                 {/* Mobile Menu Button */}
                 <div className="lg:hidden flex items-center gap-4">
-                    <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-white/20 bg-brand-brown-dark md:hidden">
-                        <img src="https://ui-avatars.com/api/?name=Diana+Ishimwe&background=random" alt="Diana" className="w-full h-full object-cover" />
-                    </div>
+                    <Link href="/settings?tab=profile" className="w-8 h-8 rounded-full overflow-hidden border-2 border-white/20 bg-brand-brown-dark md:hidden">
+                        <img
+                            src={currentUser?.profile_image ? (currentUser.profile_image.startsWith('http') ? currentUser.profile_image : `http://147.79.101.43:8000${currentUser.profile_image.startsWith('/') ? '' : '/'}${currentUser.profile_image}`) : `https://ui-avatars.com/api/?name=${encodeURIComponent(avatarName)}&background=8c4b2c&color=ffffff`}
+                            alt="User"
+                            className="w-full h-full object-cover"
+                            onError={(e) => { e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(avatarName)}&background=8c4b2c&color=ffffff`; }}
+                        />
+                    </Link>
                     <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-white p-2">
                         {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
                     </button>
@@ -150,8 +189,12 @@ export default function TopNavbar() {
                             );
                         })}
                         <div className="border-t border-white/10 pt-2 mt-2">
-                            <button className="w-full hover:bg-black/5 rounded-xl px-4 py-3 flex items-center gap-3 text-white/80" onClick={() => router.push('/login')}>
-                                <span className="text-sm font-bold">Sohoka (Logout Demo)</span>
+                            <button className="w-full hover:bg-black/5 rounded-xl px-4 py-3 flex items-center gap-3 text-white/80" onClick={() => {
+                                localStorage.removeItem('access_token');
+                                localStorage.removeItem('refresh_token');
+                                router.push('/login');
+                            }}>
+                                <span className="text-sm font-bold">Sohoka</span>
                             </button>
                         </div>
                     </div>

@@ -1,25 +1,27 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, Variants } from 'framer-motion';
 import {
-    LogOut, Shield, Moon, Bell, Clock, Camera, Wifi, RefreshCw, ChevronRight, Settings as SettingsIcon
+    LogOut, Shield, Moon, Bell, Clock, Camera, Wifi, RefreshCw, ChevronRight, Settings as SettingsIcon, User, Save, Loader2
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import TopNavbar from '@/components/layout/TopNavbar';
+import { TextInput, Button } from '@/components/ui/FormElements';
 
 export default function SettingsPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [activeTab, setActiveTab] = useState<string | null>(null);
+
+    useEffect(() => {
+        const tab = searchParams?.get('tab');
+        if (tab) setActiveTab(tab);
+    }, [searchParams]);
 
     const containerVariants: Variants = {
         hidden: { opacity: 0 },
         show: { opacity: 1, transition: { staggerChildren: 0.1 } }
-    };
-
-    const itemVariants: Variants = {
-        hidden: { opacity: 0, x: -20 },
-        show: { opacity: 1, x: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
     };
 
     const rightPaneVariants: Variants = {
@@ -27,12 +29,114 @@ export default function SettingsPage() {
         show: { opacity: 1, scale: 1, transition: { duration: 0.4, ease: "easeOut" } }
     };
 
+    // Profile State
+    const [profile, setProfile] = useState<any>(null);
+    const [isFetching, setIsFetching] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [formData, setFormData] = useState({ first_name: '', last_name: '', phone_number: '' });
+    const [msg, setMsg] = useState({ text: '', type: '' });
+
+    // File upload state for profile picture
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        if (activeTab === 'profile' && !profile) {
+            fetchProfile();
+        }
+    }, [activeTab]);
+
+    const fetchProfile = async () => {
+        setIsFetching(true);
+        const token = localStorage.getItem('access_token');
+        try {
+            const res = await fetch('http://147.79.101.43:8000/users/me', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            if (data.success && data.data) {
+                setProfile(data.data);
+                setFormData({
+                    first_name: data.data.first_name || '',
+                    last_name: data.data.last_name || '',
+                    phone_number: data.data.phone_number || ''
+                });
+                if (data.data.profile_image) {
+                    setPreviewUrl(data.data.profile_image.startsWith('http') ? data.data.profile_image : `http://147.79.101.43:8000${data.data.profile_image.startsWith('/') ? '' : '/'}${data.data.profile_image}`);
+                }
+            }
+        } catch (err) {
+            console.error("Error fetching profile", err);
+        } finally {
+            setIsFetching(false);
+        }
+    };
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files.length > 0) {
+            const file = e.target.files[0];
+            setSelectedFile(file);
+            const objectUrl = URL.createObjectURL(file);
+            setPreviewUrl(objectUrl);
+        }
+    };
+
+    const handleSaveProfile = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSaving(true);
+        setMsg({ text: '', type: '' });
+        const token = localStorage.getItem('access_token');
+
+        try {
+            // Send query parameters as required by API
+            const params = new URLSearchParams();
+            if (formData.first_name) params.append('first_name', formData.first_name);
+            if (formData.last_name) params.append('last_name', formData.last_name);
+            if (formData.phone_number) params.append('phone_number', formData.phone_number);
+
+            const fd = new FormData();
+            if (selectedFile) {
+                fd.append('file', selectedFile);
+            }
+
+            const res = await fetch(`http://147.79.101.43:8000/users/me?${params.toString()}`, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                body: fd
+            });
+            const data = await res.json();
+            if (data.success) {
+                setMsg({ text: 'Umwirondoro wavuguruwe neza!', type: 'success' });
+                setProfile(data.data);
+                localStorage.setItem('cached_user_profile', JSON.stringify(data.data));
+                if (data.data.profile_image) {
+                    setPreviewUrl(data.data.profile_image.startsWith('http') ? data.data.profile_image : `http://147.79.101.43:8000${data.data.profile_image.startsWith('/') ? '' : '/'}${data.data.profile_image}`);
+                }
+            } else {
+                setMsg({ text: data.message || 'Kuvugurura umwirondoro byanze', type: 'error' });
+            }
+        } catch (err) {
+            console.error(err);
+            setMsg({ text: 'Habaye ikibazo mu kubika, ongera ugerageze', type: 'error' });
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleLogout = () => {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        router.push('/login');
+    };
+
     return (
         <div className="min-h-screen bg-[#fcf9f8] font-sans pb-12 overflow-x-hidden">
             <TopNavbar />
 
             <main className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pt-6 lg:pt-10">
-
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:justify-between md:items-end mb-8 md:mb-12 gap-4">
                     <div>
@@ -41,7 +145,7 @@ export default function SettingsPage() {
                     </div>
 
                     <button
-                        onClick={() => router.push('/login')}
+                        onClick={handleLogout}
                         className="flex items-center justify-center gap-2 px-6 py-3 bg-red-50 hover:bg-red-100 text-red-500 rounded-2xl font-bold text-sm transition-colors self-start md:self-auto shadow-sm"
                     >
                         <LogOut size={18} />
@@ -50,7 +154,6 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-
                     {/* Left Sidebar Menu */}
                     <motion.div
                         variants={containerVariants}
@@ -58,6 +161,20 @@ export default function SettingsPage() {
                         animate="show"
                         className="lg:col-span-1 flex flex-col gap-8"
                     >
+                        {/* KONTI YANJYE */}
+                        <div>
+                            <h3 className="text-[10px] lg:text-xs font-black text-brand-brown tracking-widest uppercase mb-4 pl-2 lg:pl-0">KONTI YANJYE</h3>
+                            <div className="flex flex-col gap-3">
+                                <SettingsMenuCard
+                                    icon={User}
+                                    title="Umwirondoro"
+                                    value="PROFILE"
+                                    isActive={activeTab === 'profile'}
+                                    onClick={() => setActiveTab('profile')}
+                                />
+                            </div>
+                        </div>
+
                         {/* SISITEMU Group */}
                         <div>
                             <h3 className="text-[10px] lg:text-xs font-black text-brand-brown tracking-widest uppercase mb-4 pl-2 lg:pl-0">SISITEMU</h3>
@@ -126,36 +243,119 @@ export default function SettingsPage() {
                         variants={rightPaneVariants}
                         initial="hidden"
                         animate="show"
-                        className="lg:col-span-2 h-full min-h-[600px] bg-white rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border-4 border-white flex flex-col items-center justify-center p-8 text-center relative overflow-hidden"
+                        className="lg:col-span-2 h-full min-h-[600px] bg-white rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border-4 border-white flex flex-col p-8 md:p-12 relative overflow-hidden"
                     >
                         {/* Subtle background glow */}
                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[#f5ebe6] rounded-full blur-[100px] opacity-60 z-0"></div>
 
-                        {!activeTab ? (
-                            <div className="relative z-10 flex flex-col items-center max-w-sm">
-                                <div className="w-24 h-24 bg-white rounded-3xl shadow-xl flex items-center justify-center text-brand-brown mb-8 border border-brand-text/5">
-                                    <SettingsIcon size={40} className="animate-[spin_10s_linear_infinite]" />
+                        <div className="relative z-10 w-full h-full flex flex-col">
+                            {!activeTab ? (
+                                <div className="flex-1 flex flex-col items-center justify-center text-center max-w-sm mx-auto">
+                                    <div className="w-24 h-24 bg-white rounded-3xl shadow-xl flex items-center justify-center text-brand-brown mb-8 border border-brand-text/5">
+                                        <SettingsIcon size={40} className="animate-[spin_10s_linear_infinite]" />
+                                    </div>
+                                    <h2 className="text-2xl font-black text-brand-brown tracking-tight mb-4">Hitamo Igenamiterere</h2>
+                                    <p className="text-brand-text/60 font-medium text-sm leading-relaxed">
+                                        Hitamo ikintu ushaka guhindura mu rutonde ruri ibumoso kugira ngo ubone ibisobanuro birambuye.
+                                    </p>
                                 </div>
-                                <h2 className="text-2xl font-black text-brand-brown tracking-tight mb-4">Hitamo Igenamiterere</h2>
-                                <p className="text-brand-text/60 font-medium text-sm leading-relaxed">
-                                    Hitamo ikintu ushaka guhindura mu rutonde ruri ibumoso kugira ngo ubone ibisobanuro birambuye.
-                                </p>
-                            </div>
-                        ) : (
-                            <div className="relative z-10 flex flex-col items-center">
-                                <div className="w-20 h-20 bg-brand-brown/10 rounded-2xl flex items-center justify-center text-brand-brown mb-6">
-                                    <SettingsIcon size={32} />
-                                </div>
-                                <h2 className="text-xl font-black text-brand-brown tracking-tight mb-2 uppercase">Setting: {activeTab}</h2>
-                                <p className="text-brand-text/60 font-medium text-sm">Preview mode for {activeTab}. Configuration form would go here.</p>
-                                <button className="mt-8 px-6 py-2.5 bg-brand-brown text-white rounded-full font-bold text-xs tracking-widest uppercase hover:bg-brand-brown-dark transition-colors" onClick={() => setActiveTab(null)}>
-                                    Funga
-                                </button>
-                            </div>
-                        )}
+                            ) : activeTab === 'profile' ? (
+                                <div className="w-full max-w-xl mx-auto">
+                                    <div className="flex items-center gap-6 mb-8">
+                                        <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+                                            <div className="w-20 h-20 bg-brand-brown-dark rounded-full flex items-center justify-center text-white overflow-hidden border-4 border-white shadow-md relative">
+                                                {previewUrl ? (
+                                                    <img
+                                                        src={previewUrl}
+                                                        alt="Profile preview"
+                                                        className="w-full h-full object-cover"
+                                                        onError={(e) => { e.currentTarget.src = `https://ui-avatars.com/api/?name=${profile?.first_name || 'U'}&background=random`; }}
+                                                    />
+                                                ) : (
+                                                    <span className="text-2xl font-black">{profile?.first_name?.[0] || 'U'}</span>
+                                                )}
 
+                                                <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <Camera size={20} className="text-white" />
+                                                </div>
+                                            </div>
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                className="hidden"
+                                                ref={fileInputRef}
+                                                onChange={handleFileChange}
+                                            />
+                                        </div>
+                                        <div>
+                                            <h2 className="text-2xl font-black text-brand-brown tracking-tight">Umwirondoro Wawe</h2>
+                                            <p className="text-brand-text/60 font-medium text-sm">Guhindura imyirondoro n'ifoto yawe bwite.</p>
+                                        </div>
+                                    </div>
+
+                                    {isFetching ? (
+                                        <div className="flex justify-center p-10">
+                                            <Loader2 className="animate-spin text-brand-brown" size={32} />
+                                        </div>
+                                    ) : (
+                                        <form onSubmit={handleSaveProfile} className="space-y-5 bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-sm relative z-20">
+                                            {msg.text && (
+                                                <div className={`p-4 rounded-xl text-sm font-bold ${msg.type === 'success' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
+                                                    {msg.text}
+                                                </div>
+                                            )}
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                                <TextInput
+                                                    label="Izina rya mbere"
+                                                    type="text"
+                                                    placeholder="Urugero: Kamanzi"
+                                                    value={formData.first_name}
+                                                    onChange={e => setFormData({ ...formData, first_name: e.target.value })}
+                                                />
+                                                <TextInput
+                                                    label="Izina rya kabiri"
+                                                    type="text"
+                                                    placeholder="Urugero: Eric"
+                                                    value={formData.last_name}
+                                                    onChange={e => setFormData({ ...formData, last_name: e.target.value })}
+                                                />
+                                            </div>
+
+                                            <TextInput
+                                                label="Imeri (Email)"
+                                                type="email"
+                                                disabled
+                                                value={profile?.email || ''}
+                                                placeholder="Imeri ntishobora guhindurwa hano"
+                                                className="opacity-70"
+                                            />
+
+                                            <TextInput
+                                                label="Nomero ya telefone"
+                                                type="tel"
+                                                placeholder="07..."
+                                                value={formData.phone_number}
+                                                onChange={e => setFormData({ ...formData, phone_number: e.target.value })}
+                                            />
+
+                                            <div className="pt-4 flex justify-end">
+                                                <Button type="submit" disabled={isSaving} className="px-8 flex-none w-max">
+                                                    {isSaving ? <Loader2 size={18} className="animate-spin inline mr-2" /> : <Save size={18} className="inline mr-2" />}
+                                                    {isSaving ? 'Birabikwa...' : 'Bika Impinduka'}
+                                                </Button>
+                                            </div>
+                                        </form>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className="flex-1 flex flex-col items-center justify-center text-center">
+                                    <h2 className="text-xl font-black text-brand-brown tracking-tight mb-2 uppercase">Igenamiterere: {activeTab}</h2>
+                                    <p className="text-brand-text/60 font-medium text-sm">Aha hazajya igenamiterere rijyanye na {activeTab}.</p>
+                                </div>
+                            )}
+                        </div>
                     </motion.div>
-
                 </div>
             </main>
         </div>
