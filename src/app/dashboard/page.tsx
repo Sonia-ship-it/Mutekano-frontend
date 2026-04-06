@@ -2,31 +2,31 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, Variants } from 'framer-motion';
+import { useUser } from '@/context/UserContext';
 import {
     Shield, Video, Bell, Battery, Camera, Database, Activity, Wifi, ChevronRight
 } from 'lucide-react';
 import TopNavbar from '@/components/layout/TopNavbar';
 
 export default function DashboardPage() {
-    const [currentUser, setCurrentUser] = useState<any>(null);
+    const { user: currentUser } = useUser();
+    const [deviceCount, setDeviceCount] = useState(0);
 
     useEffect(() => {
-        const fetchUser = async () => {
+        const fetchDevices = async () => {
             const token = localStorage.getItem('access_token');
             if (!token) return;
             try {
-                const res = await fetch('http://147.79.101.43:8000/users/me', {
+                const res = await fetch('http://147.79.101.43:8000/devices/mine?limit=1', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const data = await res.json();
-                if (data.success && data.data) {
-                    setCurrentUser(data.data);
+                if (data.success) {
+                    setDeviceCount(data.data.total || 0);
                 }
-            } catch (err) {
-                console.error("Failed to fetch user", err);
-            }
+            } catch (err) { }
         };
-        fetchUser();
+        fetchDevices();
     }, []);
 
     const containerVariants: Variants = {
@@ -85,7 +85,7 @@ export default function DashboardPage() {
                 {/* Stats Row */}
                 <motion.div variants={itemVariants} className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8 lg:mb-10">
                     <StatCard icon={<Battery className="text-yellow-500" size={20} />} label="BATERI" value="85%" iconBg="bg-yellow-100" />
-                    <StatCard icon={<Camera className="text-brand-brown" size={20} />} label="CAMERA" value="2" iconBg="bg-[#f0e6e1]" />
+                    <StatCard icon={<Camera className="text-brand-brown" size={20} />} label="KAMERA" value={deviceCount < 10 ? `0${deviceCount}` : deviceCount.toString()} iconBg="bg-[#f0e6e1]" />
                     <StatCard icon={<Bell className="text-blue-500" size={20} />} label="IBIBAZO BYABAYE" value="02" iconBg="bg-blue-100" />
                     <StatCard icon={<Database className="text-purple-500" size={20} />} label="UBUBIKO" value="1.2TB" iconBg="bg-purple-100" />
                 </motion.div>

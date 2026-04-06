@@ -1,48 +1,20 @@
-"use client";
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
+import { usePathname } from 'next/navigation';
+import { motion } from 'framer-motion';
+import { useUser } from '@/context/UserContext';
 import {
-    Shield, Search, Bell, Menu, X, Users, Settings
+    Shield, Search, Bell, Menu, X, Users, Settings, Monitor
 } from 'lucide-react';
 
 export default function AdminTopNavbar() {
     const pathname = usePathname();
-    const router = useRouter();
+    const { user: currentUser } = useUser();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const [currentUser, setCurrentUser] = useState<any>(null);
-
-    useEffect(() => {
-        const cachedUser = localStorage.getItem('cached_user_profile');
-        if (cachedUser) {
-            try {
-                setCurrentUser(JSON.parse(cachedUser));
-            } catch (e) { }
-        }
-
-        const fetchUser = async () => {
-            const token = localStorage.getItem('access_token');
-            if (!token) return;
-            try {
-                const res = await fetch('http://147.79.101.43:8000/users/me', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const data = await res.json();
-                if (data.success && data.data) {
-                    setCurrentUser(data.data);
-                    localStorage.setItem('cached_user_profile', JSON.stringify(data.data));
-                }
-            } catch (err) {
-                console.error("Failed to fetch user in nav", err);
-            }
-        };
-        fetchUser();
-    }, []);
 
     const navItems = [
         { name: 'Abakoresha', path: '/admin/users', icon: Users },
+        { name: 'Ibikoresho', path: '/admin/devices', icon: Monitor },
         { name: 'Igenamiterere', path: '/admin/settings', icon: Settings },
     ];
 

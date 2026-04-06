@@ -3,7 +3,8 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, Plus, Video, Camera, Bell, User as UserIcon, Power, Pencil, Trash2, Loader2 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import ConfirmationModal from '@/components/ui/ConfirmationModal';
 
 interface User {
     id: string;
@@ -22,6 +23,13 @@ export default function AdminUsersPage() {
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
+
+    // Confirmation Modal State
+    const [confirmModal, setConfirmModal] = useState<{
+        isOpen: boolean;
+        type: 'delete' | 'toggle' | null;
+        user: User | null;
+    }>({ isOpen: false, type: null, user: null });
 
     const fetchUsers = async () => {
         const token = localStorage.getItem('access_token');
@@ -58,8 +66,6 @@ export default function AdminUsersPage() {
     }, [router]);
 
     const handleToggleStatus = async (user: User) => {
-        if (!confirm(`Are you sure you want to ${user.status === 'ACTIVE' ? 'deactivate' : 'activate'} this user?`)) return;
-
         setActionLoading(user.id);
         const token = localStorage.getItem('access_token');
         const endpoint = user.status === 'ACTIVE' ? `/deactivate` : `/activate`;
@@ -73,19 +79,18 @@ export default function AdminUsersPage() {
             if (data.success) {
                 fetchUsers();
             } else {
-                alert(data.message || 'Failed to update status');
+                alert(data.message || 'Guhindura imimerere byanze');
             }
         } catch (error) {
             console.error(error);
-            alert('An error occurred');
+            alert('Habaye ikibazo');
         } finally {
             setActionLoading(null);
+            setConfirmModal({ isOpen: false, type: null, user: null });
         }
     };
 
     const handleDeleteUser = async (user: User) => {
-        if (!confirm(`Are you sure you want to completely DELETE ${user.first_name}? This cannot be undone.`)) return;
-
         setActionLoading(`delete-${user.id}`);
         const token = localStorage.getItem('access_token');
 
@@ -98,13 +103,14 @@ export default function AdminUsersPage() {
             if (data.success) {
                 fetchUsers();
             } else {
-                alert(data.message || 'Failed to delete user');
+                alert(data.message || 'Gusiba umukoresha byanze');
             }
         } catch (error) {
             console.error(error);
-            alert('An error occurred');
+            alert('Habaye ikibazo');
         } finally {
             setActionLoading(null);
+            setConfirmModal({ isOpen: false, type: null, user: null });
         }
     };
 
@@ -261,10 +267,10 @@ export default function AdminUsersPage() {
                                                         <Loader2 className="animate-spin text-[#b66641]" size={18} />
                                                     ) : (
                                                         <>
-                                                            <button disabled={!!actionLoading} onClick={() => handleToggleStatus(user)} className={`${user.status === 'ACTIVE' ? 'hover:text-red-500' : 'hover:text-green-500'} transition-colors`} title={user.status === 'ACTIVE' ? 'Deactivate User' : 'Activate User'}>
+                                                            <button disabled={!!actionLoading} onClick={() => setConfirmModal({ isOpen: true, type: 'toggle', user })} className={`${user.status === 'ACTIVE' ? 'hover:text-red-500' : 'hover:text-green-500'} transition-colors`} title={user.status === 'ACTIVE' ? 'Deactivate User' : 'Activate User'}>
                                                                 <Power size={18} />
                                                             </button>
-                                                            <button disabled={!!actionLoading} onClick={() => handleDeleteUser(user)} className="hover:text-red-500 transition-colors" title="Delete User"><Trash2 size={18} /></button>
+                                                            <button disabled={!!actionLoading} onClick={() => setConfirmModal({ isOpen: true, type: 'delete', user })} className="hover:text-red-500 transition-colors" title="Delete User"><Trash2 size={18} /></button>
                                                         </>
                                                     )}
                                                 </div>
@@ -277,6 +283,24 @@ export default function AdminUsersPage() {
                     </table>
                 </div>
             </div>
+
+            <ConfirmationModal
+                isOpen={confirmModal.isOpen}
+                onClose={() => setConfirmModal({ isOpen: false, type: null, user: null })}
+                onConfirm={() => {
+                    if (confirmModal.user) {
+                        if (confirmModal.type === 'delete') handleDeleteUser(confirmModal.user);
+                        else if (confirmModal.type === 'toggle') handleToggleStatus(confirmModal.user);
+                    }
+                }}
+                isLoading={!!actionLoading}
+                title={confirmModal.type === 'delete' ? "Gusiba Umukoresha" : (confirmModal.user?.status === 'ACTIVE' ? "Guhagarika Umukoresha" : "Gufungura Umukoresha")}
+                message={confirmModal.type === 'delete'
+                    ? `Ushaka koko gusiba burundu ${confirmModal.user?.first_name}? Ibi ntibishobora gusubirwamo.`
+                    : `Ushaka koko ${confirmModal.user?.status === 'ACTIVE' ? 'guhagarika' : 'gufungura'} uyu mukoresha?`}
+                type={confirmModal.type === 'delete' ? 'danger' : 'warning'}
+                confirmText={confirmModal.type === 'delete' ? 'SIBA' : (confirmModal.user?.status === 'ACTIVE' ? 'HAGARIKA' : 'FUNGURA')}
+            />
         </div>
     );
 }

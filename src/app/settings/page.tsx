@@ -8,6 +8,8 @@ import {
 import { useRouter, useSearchParams } from 'next/navigation';
 import TopNavbar from '@/components/layout/TopNavbar';
 import { TextInput, Button } from '@/components/ui/FormElements';
+import { useUser } from '@/context/UserContext';
+import DevicesTab from '@/components/settings/DevicesTab';
 
 export default function SettingsPage() {
     const router = useRouter();
@@ -29,9 +31,7 @@ export default function SettingsPage() {
         show: { opacity: 1, scale: 1, transition: { duration: 0.4, ease: "easeOut" } }
     };
 
-    // Profile State
-    const [profile, setProfile] = useState<any>(null);
-    const [isFetching, setIsFetching] = useState(false);
+    const { user: profile, loading: isFetching, refreshUser, logout, updateUser } = useUser();
     const [isSaving, setIsSaving] = useState(false);
     const [formData, setFormData] = useState({ first_name: '', last_name: '', phone_number: '' });
     const [msg, setMsg] = useState({ text: '', type: '' });
@@ -42,36 +42,17 @@ export default function SettingsPage() {
     const fileInputRef = React.useRef<HTMLInputElement>(null);
 
     useEffect(() => {
-        if (activeTab === 'profile' && !profile) {
-            fetchProfile();
-        }
-    }, [activeTab]);
-
-    const fetchProfile = async () => {
-        setIsFetching(true);
-        const token = localStorage.getItem('access_token');
-        try {
-            const res = await fetch('http://147.79.101.43:8000/users/me', {
-                headers: { 'Authorization': `Bearer ${token}` }
+        if (profile) {
+            setFormData({
+                first_name: profile.first_name || '',
+                last_name: profile.last_name || '',
+                phone_number: profile.phone_number || ''
             });
-            const data = await res.json();
-            if (data.success && data.data) {
-                setProfile(data.data);
-                setFormData({
-                    first_name: data.data.first_name || '',
-                    last_name: data.data.last_name || '',
-                    phone_number: data.data.phone_number || ''
-                });
-                if (data.data.profile_image) {
-                    setPreviewUrl(data.data.profile_image.startsWith('http') ? data.data.profile_image : `http://147.79.101.43:8000${data.data.profile_image.startsWith('/') ? '' : '/'}${data.data.profile_image}`);
-                }
+            if (profile.profile_image) {
+                setPreviewUrl(profile.profile_image.startsWith('http') ? profile.profile_image : `http://147.79.101.43:8000${profile.profile_image.startsWith('/') ? '' : '/'}${profile.profile_image}`);
             }
-        } catch (err) {
-            console.error("Error fetching profile", err);
-        } finally {
-            setIsFetching(false);
         }
-    };
+    }, [profile]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files.length > 0) {
@@ -89,15 +70,23 @@ export default function SettingsPage() {
         const token = localStorage.getItem('access_token');
 
         try {
-            // Send query parameters as required by API
+            // Keep query parameters for legacy backend support
             const params = new URLSearchParams();
             if (formData.first_name) params.append('first_name', formData.first_name);
             if (formData.last_name) params.append('last_name', formData.last_name);
             if (formData.phone_number) params.append('phone_number', formData.phone_number);
 
             const fd = new FormData();
+            // Also put in FormData for modern multipart handling
+            if (formData.first_name) fd.append('first_name', formData.first_name);
+            if (formData.last_name) fd.append('last_name', formData.last_name);
+            if (formData.phone_number) fd.append('phone_number', formData.phone_number);
+
             if (selectedFile) {
+                // Key 'file' is usually default in NestJS FileInterceptors
                 fd.append('file', selectedFile);
+                // Some backends specifically use the field name 'profile_image'
+                fd.append('profile_image', selectedFile);
             }
 
             const res = await fetch(`http://147.79.101.43:8000/users/me?${params.toString()}`, {
@@ -107,29 +96,35 @@ export default function SettingsPage() {
                 },
                 body: fd
             });
+
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                throw new Error(errorData.message || `Server error: ${res.status}`);
+            }
+
             const data = await res.json();
-            if (data.success) {
+            if (data.success && data.data) {
                 setMsg({ text: 'Umwirondoro wavuguruwe neza!', type: 'success' });
-                setProfile(data.data);
-                localStorage.setItem('cached_user_profile', JSON.stringify(data.data));
-                if (data.data.profile_image) {
-                    setPreviewUrl(data.data.profile_image.startsWith('http') ? data.data.profile_image : `http://147.79.101.43:8000${data.data.profile_image.startsWith('/') ? '' : '/'}${data.data.profile_image}`);
-                }
+                setSelectedFile(null);
+
+                // Immediately update the global user state with response data
+                updateUser(data.data);
+
+                // Still refresh to be 100% sure we're in sync with the server's state later
+                await refreshUser();
             } else {
                 setMsg({ text: data.message || 'Kuvugurura umwirondoro byanze', type: 'error' });
             }
-        } catch (err) {
-            console.error(err);
-            setMsg({ text: 'Habaye ikibazo mu kubika, ongera ugerageze', type: 'error' });
+        } catch (err: any) {
+            console.error("Profile update error:", err);
+            setMsg({ text: err.message || 'Habaye ikibazo mu kubika, ongera ugerageze', type: 'error' });
         } finally {
             setIsSaving(false);
         }
     };
 
     const handleLogout = () => {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        router.push('/login');
+        logout();
     };
 
     return (
@@ -348,6 +343,8 @@ export default function SettingsPage() {
                                         </form>
                                     )}
                                 </div>
+                            ) : activeTab === 'cameras' ? (
+                                <DevicesTab />
                             ) : (
                                 <div className="flex-1 flex flex-col items-center justify-center text-center">
                                     <h2 className="text-xl font-black text-brand-brown tracking-tight mb-2 uppercase">Igenamiterere: {activeTab}</h2>

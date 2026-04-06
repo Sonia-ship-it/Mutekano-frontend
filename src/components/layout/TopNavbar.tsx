@@ -1,46 +1,17 @@
-"use client";
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useUser } from '@/context/UserContext';
 import {
     Shield, Grid, Video, Clock, Settings, Search, Bell, Menu, X
 } from 'lucide-react';
 
 export default function TopNavbar() {
     const pathname = usePathname();
-    const router = useRouter();
+    const { user: currentUser, logout } = useUser();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-    const [currentUser, setCurrentUser] = useState<any>(null);
-
-    useEffect(() => {
-        const cachedUser = localStorage.getItem('cached_user_profile');
-        if (cachedUser) {
-            try {
-                setCurrentUser(JSON.parse(cachedUser));
-            } catch (e) { }
-        }
-
-        const fetchUser = async () => {
-            const token = localStorage.getItem('access_token');
-            if (!token) return;
-            try {
-                const res = await fetch('http://147.79.101.43:8000/users/me', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const data = await res.json();
-                if (data.success && data.data) {
-                    setCurrentUser(data.data);
-                    localStorage.setItem('cached_user_profile', JSON.stringify(data.data));
-                }
-            } catch (err) {
-                console.error("Failed to fetch user in nav", err);
-            }
-        };
-        fetchUser();
-    }, []);
 
     const notifications = [
         { id: 1, title: "Umuntu ku irembo rikuru", time: "Minota 5 ishize", type: "alert" },
@@ -189,11 +160,7 @@ export default function TopNavbar() {
                             );
                         })}
                         <div className="border-t border-white/10 pt-2 mt-2">
-                            <button className="w-full hover:bg-black/5 rounded-xl px-4 py-3 flex items-center gap-3 text-white/80" onClick={() => {
-                                localStorage.removeItem('access_token');
-                                localStorage.removeItem('refresh_token');
-                                router.push('/login');
-                            }}>
+                            <button className="w-full hover:bg-black/5 rounded-xl px-4 py-3 flex items-center gap-3 text-white/80" onClick={logout}>
                                 <span className="text-sm font-bold">Sohoka</span>
                             </button>
                         </div>
