@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TextInput, Button } from '@/components/ui/FormElements';
+import api from '@/lib/api';
 
 interface Device {
     id: string;
@@ -38,17 +39,9 @@ export default function DevicesTab() {
     const [msg, setMsg] = useState({ text: '', type: '' });
 
     const fetchMyDevices = async () => {
-        const token = localStorage.getItem('access_token');
-        if (!token) return;
-
         try {
-            const res = await fetch('http://147.79.101.43:8000/devices/mine?limit=50', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const data = await res.json();
-            if (data.success) {
-                setDevices(data.data.items || []);
-            }
+            const { data } = await api.get('/devices/mine?limit=50');
+            if (data.success) setDevices(data.data.items || []);
         } catch (err) {
             console.error("Error fetching my devices:", err);
         } finally {
@@ -66,34 +59,15 @@ export default function DevicesTab() {
 
         setActionLoading('claiming');
         setMsg({ text: '', type: '' });
-        const token = localStorage.getItem('access_token');
 
         try {
-            // First Claim the device using label
-            const res = await fetch(`http://147.79.101.43:8000/devices/${claimLabel}/claim`, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const data = await res.json();
+            const { data } = await api.post(`/devices/${claimLabel}/claim`);
 
             if (data.success) {
                 const deviceId = data.data.id;
-
-                // Then immediately update metadata (Name & Location)
                 if (claimName || claimLocation) {
-                    await fetch(`http://147.79.101.43:8000/devices/${deviceId}`, {
-                        method: 'PATCH',
-                        headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            name: claimName,
-                            location: claimLocation
-                        })
-                    });
+                    await api.patch(`/devices/${deviceId}`, { name: claimName, location: claimLocation });
                 }
-
                 setMsg({ text: 'Igikoresho cyanditswe neza!', type: 'success' });
                 setClaimLabel(""); setClaimName(""); setClaimLocation("");
                 fetchMyDevices();
@@ -114,21 +88,9 @@ export default function DevicesTab() {
         if (!device) return;
 
         setActionLoading(`update-${device.id}`);
-        const token = localStorage.getItem('access_token');
 
         try {
-            const res = await fetch(`http://147.79.101.43:8000/devices/${device.id}`, {
-                method: 'PATCH',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    name: editName,
-                    location: editLocation
-                })
-            });
-            const data = await res.json();
+            const { data } = await api.patch(`/devices/${device.id}`, { name: editName, location: editLocation });
             if (data.success) {
                 fetchMyDevices();
                 setShowEditModal({ show: false, device: null });

@@ -1,6 +1,8 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { usePathname } from 'next/navigation';
+import api from '@/lib/api';
 
 interface UserProfile {
     id: string;
@@ -16,7 +18,6 @@ interface UserProfile {
 interface UserContextType {
     user: UserProfile | null;
     loading: boolean;
-    error: string | null;
     refreshUser: () => Promise<void>;
     logout: () => void;
     updateUser: (newData: UserProfile) => void;
@@ -27,7 +28,9 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+
+    const pathname = usePathname();
+    const AUTH_PAGES = ['/login', '/register', '/forgot-password'];
 
     const fetchUser = useCallback(async () => {
         const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
@@ -37,45 +40,39 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
             return;
         }
 
-        // Only set loading to true if we don't have a user or cached data yet
         if (!user && !localStorage.getItem('cached_user_profile')) {
             setLoading(true);
         }
 
         try {
-            const res = await fetch(`http://147.79.101.43:8000/users/me?t=${Date.now()}`, {
-                headers: { 'Authorization': `Bearer ${token}` },
-                cache: 'no-cache'
-            });
-            const data = await res.json();
+            const { data } = await api.get(`/users/me?t=${Date.now()}`);
             if (data.success && data.data) {
                 setUser(data.data);
                 localStorage.setItem('cached_user_profile', JSON.stringify(data.data));
-            } else {
-                setError(data.message || 'Failed to fetch user');
             }
         } catch (err) {
-            console.error("Failed to fetch user", err);
-            setError('Network error fetching user');
+            // silently ignore — api.ts interceptor already cleared tokens on 401
         } finally {
             setLoading(false);
         }
     }, []);
 
     useEffect(() => {
-        // Try to load from cache immediately for zero-flicker experience
+        if (AUTH_PAGES.includes(pathname)) {
+            setLoading(false);
+            return;
+        }
+
         const cached = localStorage.getItem('cached_user_profile');
         if (cached) {
             try {
                 setUser(JSON.parse(cached));
-                setLoading(false); // We have cached data, so we're technically not "loading" placeholders
-            } catch (e) {
-                console.error("Failed to parse cached user", e);
-            }
+                setLoading(false);
+            } catch (e) { }
         }
 
         fetchUser();
-    }, [fetchUser]);
+    }, [fetchUser, pathname]);
 
     const logout = useCallback(() => {
         localStorage.removeItem('access_token');
@@ -91,7 +88,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, []);
 
     return (
-        <UserContext.Provider value={{ user, loading, error, refreshUser: fetchUser, logout, updateUser }}>
+        <UserContext.Provider value={{ user, loading, refreshUser: fetchUser, logout, updateUser }}>
             {children}
         </UserContext.Provider>
     );

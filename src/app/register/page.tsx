@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2, User, Phone } from 'lucide-react';
 import AuthLayout from '@/components/AuthLayout';
 import { TextInput, Button } from '@/components/ui/FormElements';
+import api from '@/lib/api';
 
 export default function RegisterPage() {
     const router = useRouter();
@@ -37,40 +38,23 @@ export default function RegisterPage() {
         const lastName = names.slice(1).join(' ') || firstName; // Fallback to first name if no last name
 
         try {
-            const response = await fetch('http://147.79.101.43:8000/auth/register', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    first_name: firstName,
-                    last_name: lastName,
-                    email: formData.email,
-                    phone_number: formData.phoneNumber,
-                    password: formData.password,
-                    role: "CLIENT"
-                }),
+            const { data } = await api.post('/auth/register', {
+                first_name: firstName,
+                last_name: lastName,
+                email: formData.email,
+                phone_number: formData.phoneNumber,
+                password: formData.password,
+                role: "CLIENT"
             });
 
-            const data = await response.json();
-
-            if (!response.ok) {
-                // Handle different error structures
-                if (data.detail && Array.isArray(data.detail)) {
-                    throw new Error(data.detail.map((err: any) => err.msg).join(', '));
-                }
-                throw new Error("Kwiyandikisha byanze. Kanda wiyandikishe bundi bushya.");
-            }
-
             if (data.success) {
-                // On success, redirect to login page or setup
                 router.push('/login');
             } else {
                 throw new Error("Habaye ikibazo mugufungura konti. Ongera ugerageze.");
             }
 
         } catch (error: any) {
-            setErrorMsg(error.message);
+            setErrorMsg(error.message || "Kwiyandikisha byanze. Kanda wiyandikishe bundi bushya.");
         } finally {
             setIsLoading(false);
         }
@@ -78,7 +62,7 @@ export default function RegisterPage() {
 
     return (
         <AuthLayout
-            subtitleBlock1="GUKURIKIRANA"
+            subtitleBlock1="KURIKIRANA"
             subtitleBlock2="URUGO"
             subtitleBlock3="AHO URI HOSE"
             formMaxWidth="600px"
@@ -152,7 +136,7 @@ export default function RegisterPage() {
                         {isLoading ? "IYANDIKISHE..." : "INJIRA MURI KONTI?"}
                     </Button>
 
-                    <div className="my-4 border-t border-brand-text/10 w-full relative">
+                    {/* <div className="my-4 border-t border-brand-text/10 w-full relative">
                         <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white/0 px-2 text-[10px] text-brand-text/30 font-bold">CYANGWA</span>
                     </div>
 
@@ -162,7 +146,7 @@ export default function RegisterPage() {
                         </div>
                     }>
                         KOMEZA NA GOOGLE
-                    </Button>
+                    </Button> */}
 
                     <div className="mt-4 text-center text-[10px] lg:text-xs font-bold text-brand-text/60 tracking-widest uppercase">
                         USANZWE UFITE KONTI? <Link href="/login" className="text-brand-brown hover:underline underline-offset-4">INJIRA</Link>

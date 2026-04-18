@@ -10,6 +10,7 @@ import TopNavbar from '@/components/layout/TopNavbar';
 import { TextInput, Button } from '@/components/ui/FormElements';
 import { useUser } from '@/context/UserContext';
 import DevicesTab from '@/components/settings/DevicesTab';
+import api from '@/lib/api';
 
 export default function SettingsPage() {
     const router = useRouter();
@@ -49,7 +50,8 @@ export default function SettingsPage() {
                 phone_number: profile.phone_number || ''
             });
             if (profile.profile_image) {
-                setPreviewUrl(profile.profile_image.startsWith('http') ? profile.profile_image : `http://147.79.101.43:8000${profile.profile_image.startsWith('/') ? '' : '/'}${profile.profile_image}`);
+                const base = process.env.NEXT_PUBLIC_API_URL;
+                setPreviewUrl(profile.profile_image.startsWith('http') ? profile.profile_image : `${base}${profile.profile_image.startsWith('/') ? '' : '/'}${profile.profile_image}`);
             }
         }
     }, [profile]);
@@ -67,57 +69,35 @@ export default function SettingsPage() {
         e.preventDefault();
         setIsSaving(true);
         setMsg({ text: '', type: '' });
-        const token = localStorage.getItem('access_token');
 
         try {
-            // Keep query parameters for legacy backend support
+            const fd = new FormData();
+            if (formData.first_name) fd.append('first_name', formData.first_name);
+            if (formData.last_name) fd.append('last_name', formData.last_name);
+            if (formData.phone_number) fd.append('phone_number', formData.phone_number);
+            if (selectedFile) {
+                fd.append('file', selectedFile);
+                fd.append('profile_image', selectedFile);
+            }
+
             const params = new URLSearchParams();
             if (formData.first_name) params.append('first_name', formData.first_name);
             if (formData.last_name) params.append('last_name', formData.last_name);
             if (formData.phone_number) params.append('phone_number', formData.phone_number);
 
-            const fd = new FormData();
-            // Also put in FormData for modern multipart handling
-            if (formData.first_name) fd.append('first_name', formData.first_name);
-            if (formData.last_name) fd.append('last_name', formData.last_name);
-            if (formData.phone_number) fd.append('phone_number', formData.phone_number);
+            const { data } = await api.patch(`/users/me?${params.toString()}`, fd);
 
-            if (selectedFile) {
-                // Key 'file' is usually default in NestJS FileInterceptors
-                fd.append('file', selectedFile);
-                // Some backends specifically use the field name 'profile_image'
-                fd.append('profile_image', selectedFile);
-            }
-
-            const res = await fetch(`http://147.79.101.43:8000/users/me?${params.toString()}`, {
-                method: 'PATCH',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                },
-                body: fd
-            });
-
-            if (!res.ok) {
-                const errorData = await res.json().catch(() => ({}));
-                throw new Error(errorData.message || `Server error: ${res.status}`);
-            }
-
-            const data = await res.json();
             if (data.success && data.data) {
                 setMsg({ text: 'Umwirondoro wavuguruwe neza!', type: 'success' });
                 setSelectedFile(null);
-
-                // Immediately update the global user state with response data
                 updateUser(data.data);
-
-                // Still refresh to be 100% sure we're in sync with the server's state later
                 await refreshUser();
             } else {
                 setMsg({ text: data.message || 'Kuvugurura umwirondoro byanze', type: 'error' });
             }
         } catch (err: any) {
             console.error("Profile update error:", err);
-            setMsg({ text: err.message || 'Habaye ikibazo mu kubika, ongera ugerageze', type: 'error' });
+            setMsg({ text: err.response?.data?.message || err.message || 'Habaye ikibazo mu kubika, ongera ugerageze', type: 'error' });
         } finally {
             setIsSaving(false);
         }

@@ -71,7 +71,7 @@ export default function AuthLayout({
                     </div>
 
                     <p className="text-brand-text/70 text-sm sm:text-base lg:text-lg max-w-md mx-auto lg:mx-0 font-medium leading-relaxed mb-8 lg:mb-10">
-                        Sisitemu yo gukurikirana ubuhinzi n&apos;ubworozi ikoresha ikoranabuhanga rigezweho rya AI n&apos;ibikoresho bya ESP32-CAM.
+                        Rinda umutungo wawe ukoresheje Ikoranabuhanga Rigezweho kandi Ryizewe .
                     </p>
 
                     {/* Stats */}

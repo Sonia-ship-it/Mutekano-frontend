@@ -6,18 +6,26 @@ import { Mail, ArrowRight, ArrowLeft, Loader2, CheckCircle } from 'lucide-react'
 import AuthLayout from '@/components/AuthLayout';
 import { TextInput, Button } from '@/components/ui/FormElements';
 import { motion, AnimatePresence } from 'framer-motion';
+import api from '@/lib/api';
 
 export default function ForgotPasswordPage() {
+    const [email, setEmail] = React.useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isSent, setIsSent] = useState(false);
+    const [errorMsg, setErrorMsg] = useState('');
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
-        setTimeout(() => {
-            setIsLoading(false);
+        setErrorMsg('');
+        try {
+            await api.post('/auth/forgot-password', { email });
             setIsSent(true);
-        }, 1500);
+        } catch (error: any) {
+            setErrorMsg(error.message || 'Habaye ikibazo, ongera ugerageze.');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -53,8 +61,14 @@ export default function ForgotPasswordPage() {
                                     required
                                     placeholder="izina@urubuga.rw"
                                     icon={Mail}
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
                                     className="mb-6 lg:mb-8 mt-4 lg:mt-6"
                                 />
+
+                                {errorMsg && (
+                                    <div className="p-3 mb-4 text-sm text-red-500 bg-red-50 rounded-lg">{errorMsg}</div>
+                                )}
 
                                 <Button
                                     type="submit"

@@ -7,6 +7,7 @@ import {
     Shield, Video, Bell, Battery, Camera, Database, Activity, Wifi, ChevronRight
 } from 'lucide-react';
 import TopNavbar from '@/components/layout/TopNavbar';
+import api from '@/lib/api';
 
 export default function DashboardPage() {
     const { user: currentUser } = useUser();
@@ -14,16 +15,9 @@ export default function DashboardPage() {
 
     useEffect(() => {
         const fetchDevices = async () => {
-            const token = localStorage.getItem('access_token');
-            if (!token) return;
             try {
-                const res = await fetch('http://147.79.101.43:8000/devices/mine?limit=1', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const data = await res.json();
-                if (data.success) {
-                    setDeviceCount(data.data.total || 0);
-                }
+                const { data } = await api.get('/devices/mine?limit=1');
+                if (data.success) setDeviceCount(data.data.total || 0);
             } catch (err) { }
         };
         fetchDevices();
