@@ -2,8 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-    Plus, Monitor, Trash2, Pencil, Power,
-    CheckCircle2, XCircle, Loader2, Camera, MapPin, Tag, Smartphone
+    Plus, Pencil, Loader2, Camera, MapPin, Smartphone, RefreshCw
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TextInput, Button } from '@/components/ui/FormElements';
@@ -27,16 +26,15 @@ export default function DevicesTab() {
     const [showClaimModal, setShowClaimModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState<{ show: boolean, device: Device | null }>({ show: false, device: null });
 
-    // Claiming Form
     const [claimLabel, setClaimLabel] = useState("");
     const [claimName, setClaimName] = useState("");
     const [claimLocation, setClaimLocation] = useState("");
 
-    // Editing Form
     const [editName, setEditName] = useState("");
     const [editLocation, setEditLocation] = useState("");
 
     const [msg, setMsg] = useState({ text: '', type: '' });
+    const [reconfigStatus, setReconfigStatus] = useState<Record<string, 'idle' | 'loading' | 'sent' | 'error'>>({});
 
     const fetchMyDevices = async () => {
         try {
@@ -49,20 +47,28 @@ export default function DevicesTab() {
         }
     };
 
-    useEffect(() => {
-        fetchMyDevices();
-    }, []);
+    useEffect(() => { fetchMyDevices(); }, []);
+
+    const handleReconfigure = async (deviceId: string) => {
+        if (!confirm('Ibi bizafunga kamera kandi bifungure portal ya WiFi. Komeza?')) return;
+        setReconfigStatus(s => ({ ...s, [deviceId]: 'loading' }));
+        try {
+            await api.post(`/devices/${deviceId}/request-reconfigure`);
+            setReconfigStatus(s => ({ ...s, [deviceId]: 'sent' }));
+            setTimeout(() => setReconfigStatus(s => ({ ...s, [deviceId]: 'idle' })), 5000);
+        } catch {
+            setReconfigStatus(s => ({ ...s, [deviceId]: 'error' }));
+            setTimeout(() => setReconfigStatus(s => ({ ...s, [deviceId]: 'idle' })), 3000);
+        }
+    };
 
     const handleClaim = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!claimLabel) return;
-
         setActionLoading('claiming');
         setMsg({ text: '', type: '' });
-
         try {
             const { data } = await api.post(`/devices/${claimLabel}/claim`);
-
             if (data.success) {
                 const deviceId = data.data.id;
                 if (claimName || claimLocation) {
@@ -75,7 +81,7 @@ export default function DevicesTab() {
             } else {
                 setMsg({ text: data.message || 'Kwandikisha iki gikoresho byanze', type: 'error' });
             }
-        } catch (err) {
+        } catch {
             setMsg({ text: 'Habaye ikibazo mu kwandikisha igikoresho', type: 'error' });
         } finally {
             setActionLoading(null);
@@ -86,9 +92,7 @@ export default function DevicesTab() {
         e.preventDefault();
         const device = showEditModal.device;
         if (!device) return;
-
         setActionLoading(`update-${device.id}`);
-
         try {
             const { data } = await api.patch(`/devices/${device.id}`, { name: editName, location: editLocation });
             if (data.success) {
@@ -97,7 +101,7 @@ export default function DevicesTab() {
             } else {
                 alert(data.message || 'Kuvugurura byanze');
             }
-        } catch (err) {
+        } catch {
             alert('Habaye ikibazo');
         } finally {
             setActionLoading(null);
@@ -143,55 +147,80 @@ export default function DevicesTab() {
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    {devices.map((device) => (
-                        <div key={device.id} className="bg-white rounded-3xl p-6 border border-brand-brown/5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
-                            <div className="absolute top-0 right-0 p-3 flex gap-2">
-                                <button
-                                    onClick={() => {
-                                        setShowEditModal({ show: true, device });
-                                        setEditName(device.name || "");
-                                        setEditLocation(device.location || "");
-                                    }}
-                                    className="p-2.5 rounded-xl bg-gray-50 text-gray-400 hover:text-brand-brown hover:bg-brand-brown/5 transition-all"
-                                >
-                                    <Pencil size={14} />
-                                </button>
-                            </div>
-
-                            <div className="flex items-start gap-5">
-                                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg ${device.is_active ? 'bg-green-50 text-green-600 shadow-green-500/5' : 'bg-red-50 text-red-500 shadow-red-500/5'}`}>
-                                    <Camera size={24} />
+                    {devices.map((device) => {
+                        const rs = reconfigStatus[device.id] || 'idle';
+                        return (
+                            <div key={device.id} className="bg-white rounded-3xl p-6 border border-brand-brown/5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                                <div className="absolute top-0 right-0 p-3 flex gap-2">
+                                    {/* Reconfigure WiFi button */}
+                                    <button
+                                        onClick={() => handleReconfigure(device.id)}
+                                        disabled={rs === 'loading'}
+                                        title={rs === 'sent' ? 'Signal yoherejwe!' : rs === 'error' ? 'Byanze' : 'Hindura WiFi'}
+                                        className={`p-2.5 rounded-xl transition-all ${
+                                            rs === 'sent'    ? 'bg-green-50 text-green-600' :
+                                            rs === 'error'   ? 'bg-red-50 text-red-500' :
+                                            rs === 'loading' ? 'bg-gray-50 text-gray-400 cursor-not-allowed' :
+                                            'bg-amber-50 text-amber-600 hover:bg-amber-100'
+                                        }`}
+                                    >
+                                        {rs === 'loading'
+                                            ? <Loader2 size={14} className="animate-spin" />
+                                            : <RefreshCw size={14} />}
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            setShowEditModal({ show: true, device });
+                                            setEditName(device.name || "");
+                                            setEditLocation(device.location || "");
+                                        }}
+                                        className="p-2.5 rounded-xl bg-gray-50 text-gray-400 hover:text-brand-brown hover:bg-brand-brown/5 transition-all"
+                                    >
+                                        <Pencil size={14} />
+                                    </button>
                                 </div>
 
-                                <div className="flex-1 min-w-0 pr-10">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <h4 className="font-black text-brand-brown mb-0.5 truncate">{device.name || device.label}</h4>
-                                        <div className={`w-1.5 h-1.5 rounded-full ${device.is_active ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
-                                    </div>
-                                    <div className="flex items-center gap-2 mb-4">
-                                        <MapPin size={12} className="text-brand-text/30" />
-                                        <span className="text-xs font-bold text-brand-text/50 truncate italic">
-                                            {device.location || 'Aho iherereye ntabwo hazwi'}
-                                        </span>
+                                <div className="flex items-start gap-5">
+                                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg ${device.is_active ? 'bg-green-50 text-green-600 shadow-green-500/5' : 'bg-red-50 text-red-500 shadow-red-500/5'}`}>
+                                        <Camera size={24} />
                                     </div>
 
-                                    <div className="flex items-center gap-4">
-                                        <div className="flex flex-col">
-                                            <span className="text-[8px] font-black tracking-widest text-brand-text/30 uppercase leading-none mb-1">CODE</span>
-                                            <span className="text-[10px] font-bold text-brand-text leading-none">{device.label}</span>
+                                    <div className="flex-1 min-w-0 pr-20">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <h4 className="font-black text-brand-brown mb-0.5 truncate">{device.name || device.label}</h4>
+                                            <div className={`w-1.5 h-1.5 rounded-full ${device.is_active ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
                                         </div>
-                                        <div className="h-6 w-[1px] bg-brand-text/5"></div>
-                                        <div className="flex flex-col">
-                                            <span className="text-[8px] font-black tracking-widest text-brand-text/30 uppercase leading-none mb-1">IMIMERERE</span>
-                                            <span className={`text-[10px] font-black leading-none ${device.is_active ? 'text-green-600' : 'text-red-500'}`}>
-                                                {device.is_active ? 'YIFUNGUYE' : 'YAFUNZWE'}
+                                        <div className="flex items-center gap-2 mb-4">
+                                            <MapPin size={12} className="text-brand-text/30" />
+                                            <span className="text-xs font-bold text-brand-text/50 truncate italic">
+                                                {device.location || 'Aho iherereye ntabwo hazwi'}
                                             </span>
                                         </div>
+
+                                        <div className="flex items-center gap-4">
+                                            <div className="flex flex-col">
+                                                <span className="text-[8px] font-black tracking-widest text-brand-text/30 uppercase leading-none mb-1">CODE</span>
+                                                <span className="text-[10px] font-bold text-brand-text leading-none">{device.label}</span>
+                                            </div>
+                                            <div className="h-6 w-[1px] bg-brand-text/5"></div>
+                                            <div className="flex flex-col">
+                                                <span className="text-[8px] font-black tracking-widest text-brand-text/30 uppercase leading-none mb-1">IMIMERERE</span>
+                                                <span className={`text-[10px] font-black leading-none ${device.is_active ? 'text-green-600' : 'text-red-500'}`}>
+                                                    {device.is_active ? 'YIFUNGUYE' : 'YAFUNZWE'}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        {rs === 'sent' && (
+                                            <p className="text-[10px] font-bold text-green-600 mt-2">
+                                                ✓ Signal yoherejwe — reba hotspot MUTEKANO-CAM
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             )}
 
@@ -238,11 +267,7 @@ export default function DevicesTab() {
                                     >
                                         REKA
                                     </button>
-                                    <Button
-                                        type="submit"
-                                        disabled={actionLoading === 'claiming'}
-                                        className="flex-1 py-4 flex-none"
-                                    >
+                                    <Button type="submit" disabled={actionLoading === 'claiming'} className="flex-1 py-4 flex-none">
                                         {actionLoading === 'claiming' ? <Loader2 className="animate-spin inline mr-2" /> : <Smartphone className="inline mr-2" size={16} />}
                                         KWANDIKISHA
                                     </Button>
@@ -285,12 +310,8 @@ export default function DevicesTab() {
                                     >
                                         REKA
                                     </button>
-                                    <Button
-                                        type="submit"
-                                        disabled={actionLoading?.startsWith('update-')}
-                                        className="flex-1 py-4 flex-none"
-                                    >
-                                        {actionLoading?.startsWith('update-') ? <Loader2 className="animate-spin inline mr-2" /> : <Loader2 className="hidden" />}
+                                    <Button type="submit" disabled={actionLoading?.startsWith('update-')} className="flex-1 py-4 flex-none">
+                                        {actionLoading?.startsWith('update-') ? <Loader2 className="animate-spin inline mr-2" /> : null}
                                         KUBIKA
                                     </Button>
                                 </div>

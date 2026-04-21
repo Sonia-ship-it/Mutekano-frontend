@@ -113,7 +113,7 @@ export default function TopNavbar() {
                         </div>
                         <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/20 bg-brand-brown-dark shadow-inner">
                             <img
-                                src={currentUser?.profile_image ? (currentUser.profile_image.startsWith('http') ? currentUser.profile_image : `http://147.79.101.43:8000${currentUser.profile_image.startsWith('/') ? '' : '/'}${currentUser.profile_image}`) : `https://ui-avatars.com/api/?name=${encodeURIComponent(avatarName)}&background=8c4b2c&color=ffffff`}
+                                src={currentUser?.profile_image ? (currentUser.profile_image.startsWith('http') ? currentUser.profile_image : `${process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1/', '') || ''}${currentUser.profile_image.startsWith('/') ? '' : '/'}${currentUser.profile_image}`) : `https://ui-avatars.com/api/?name=${encodeURIComponent(avatarName)}&background=8c4b2c&color=ffffff`}
                                 alt="User"
                                 className="w-full h-full object-cover"
                                 onError={(e) => { e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(avatarName)}&background=8c4b2c&color=ffffff`; }}
@@ -126,7 +126,7 @@ export default function TopNavbar() {
                 <div className="lg:hidden flex items-center gap-4">
                     <Link href="/settings?tab=profile" className="w-8 h-8 rounded-full overflow-hidden border-2 border-white/20 bg-brand-brown-dark md:hidden">
                         <img
-                            src={currentUser?.profile_image ? (currentUser.profile_image.startsWith('http') ? currentUser.profile_image : `http://147.79.101.43:8000${currentUser.profile_image.startsWith('/') ? '' : '/'}${currentUser.profile_image}`) : `https://ui-avatars.com/api/?name=${encodeURIComponent(avatarName)}&background=8c4b2c&color=ffffff`}
+                            src={currentUser?.profile_image ? (currentUser.profile_image.startsWith('http') ? currentUser.profile_image : `${process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1/', '') || ''}${currentUser.profile_image.startsWith('/') ? '' : '/'}${currentUser.profile_image}`) : `https://ui-avatars.com/api/?name=${encodeURIComponent(avatarName)}&background=8c4b2c&color=ffffff`}
                             alt="User"
                             className="w-full h-full object-cover"
                             onError={(e) => { e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(avatarName)}&background=8c4b2c&color=ffffff`; }}

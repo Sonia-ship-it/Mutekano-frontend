@@ -4,10 +4,12 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
     Search, Plus, Monitor, Power, Pencil, Trash2,
-    Loader2, Camera, Shield, CheckCircle2, XCircle
+    Loader2, Camera, Shield, CheckCircle2, XCircle, QrCode, Copy, CheckCheck
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ConfirmationModal from '@/components/ui/ConfirmationModal';
+import QRCode from 'qrcode';
+import api from '@/lib/api';
 
 interface Device {
     id: string;
@@ -24,7 +26,6 @@ interface Device {
 }
 
 export default function AdminDevicesPage() {
-    const router = useRouter();
     const [devices, setDevices] = useState<Device[]>([]);
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -32,6 +33,7 @@ export default function AdminDevicesPage() {
     const [showAddModal, setShowAddModal] = useState(false);
     const [newDeviceLabel, setNewDeviceLabel] = useState("");
     const [msg, setMsg] = useState({ text: '', type: '' });
+    const [createdDevice, setCreatedDevice] = useState<{ id: string; api_key: string; label: string } | null>(null);
 
     // Confirmation Modal State
     const [confirmModal, setConfirmModal] = useState<{
@@ -41,27 +43,10 @@ export default function AdminDevicesPage() {
     }>({ isOpen: false, type: null, device: null });
 
     const fetchDevices = async () => {
-        const token = localStorage.getItem('access_token');
-        if (!token) {
-            router.push('/login');
-            return;
-        }
-
         try {
-            const response = await fetch('http://147.79.101.43:8000/devices/', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-
-            if (response.status === 401 || response.status === 403) {
-                router.push('/login');
-                return;
-            }
-
-            const data = await response.json();
+            const { data } = await api.get('/devices/?limit=100');
             if (data.success) {
-                // Ensure we get an array even if paginated
-                const deviceList = Array.isArray(data.data) ? data.data : (data.data?.items || []);
-                setDevices(deviceList);
+                setDevices(data.data?.items || []);
             }
         } catch (err) {
             console.error("Error fetching devices:", err);
@@ -77,30 +62,19 @@ export default function AdminDevicesPage() {
     const handleAddDevice = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newDeviceLabel) return;
-
         setActionLoading('adding');
-        const token = localStorage.getItem('access_token');
-
         try {
-            const res = await fetch('http://147.79.101.43:8000/devices/', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ label: newDeviceLabel })
-            });
-            const data = await res.json();
+            const { data } = await api.post('/devices/', { label: newDeviceLabel });
             if (data.success) {
-                setMsg({ text: 'Igikoresho cyanditswe neza!', type: 'success' });
                 setNewDeviceLabel("");
                 setShowAddModal(false);
+                setCreatedDevice({ id: data.data.id, api_key: data.data.api_key, label: data.data.label });
                 fetchDevices();
             } else {
                 setMsg({ text: data.message || 'Kwandika igikoresho byanze', type: 'error' });
             }
-        } catch (error) {
-            setMsg({ text: 'Habaye ikibazo, ongera ugerageze', type: 'error' });
+        } catch (error: any) {
+            setMsg({ text: error.message || 'Habaye ikibazo, ongera ugerageze', type: 'error' });
         } finally {
             setActionLoading(null);
         }
@@ -109,21 +83,11 @@ export default function AdminDevicesPage() {
     const handleToggleStatus = async (device: Device) => {
         const action = device.is_active ? 'deactivate' : 'activate';
         setActionLoading(device.id);
-        const token = localStorage.getItem('access_token');
-
         try {
-            const res = await fetch(`http://147.79.101.43:8000/devices/${device.id}/${action}`, {
-                method: 'PATCH',
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const data = await res.json();
-            if (data.success) {
-                fetchDevices();
-            } else {
-                alert(data.message || 'Guhindura imimerere byanze');
-            }
-        } catch (error) {
-            alert('Habaye ikibazo');
+            await api.patch(`/devices/${device.id}/${action}`);
+            fetchDevices();
+        } catch (error: any) {
+            alert(error.message || 'Habaye ikibazo');
         } finally {
             setActionLoading(null);
             setConfirmModal({ isOpen: false, type: null, device: null });
@@ -132,21 +96,11 @@ export default function AdminDevicesPage() {
 
     const handleDeleteDevice = async (device: Device) => {
         setActionLoading(`delete-${device.id}`);
-        const token = localStorage.getItem('access_token');
-
         try {
-            const res = await fetch(`http://147.79.101.43:8000/devices/${device.id}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const data = await res.json();
-            if (data.success) {
-                fetchDevices();
-            } else {
-                alert(data.message || 'Gusiba byanze');
-            }
-        } catch (error) {
-            alert('Habaye ikibazo');
+            await api.delete(`/devices/${device.id}`);
+            fetchDevices();
+        } catch (error: any) {
+            alert(error.message || 'Habaye ikibazo');
         } finally {
             setActionLoading(null);
             setConfirmModal({ isOpen: false, type: null, device: null });
@@ -382,6 +336,16 @@ export default function AdminDevicesPage() {
                 type={confirmModal.type === 'delete' ? 'danger' : 'warning'}
                 confirmText={confirmModal.type === 'delete' ? 'SIBA' : (confirmModal.device?.is_active ? 'HAGARIKA' : 'FUNGURA')}
             />
+
+            {/* QR Code Modal — shown after device creation */}
+            <AnimatePresence>
+                {createdDevice && (
+                    <QRModal
+                        device={createdDevice}
+                        onClose={() => setCreatedDevice(null)}
+                    />
+                )}
+            </AnimatePresence>
         </div>
     );
 }
@@ -405,6 +369,59 @@ function StatCard({ icon, label, value, color }: { icon: any, label: string, val
             <div className="text-4xl font-black text-[#1d1d1b]">
                 {value < 10 && value > 0 ? `0${value}` : value}
             </div>
+        </div>
+    );
+}
+
+function QRModal({ device, onClose }: { device: { id: string; api_key: string; label: string }; onClose: () => void }) {
+    const [qrDataUrl, setQrDataUrl] = React.useState('');
+    const [copied, setCopied] = React.useState(false);
+
+    React.useEffect(() => {
+        const payload = JSON.stringify({ device_id: device.id, api_key: device.api_key });
+        QRCode.toDataURL(payload, { width: 256, margin: 2 }).then(setQrDataUrl);
+    }, [device]);
+
+    const handleCopy = () => {
+        navigator.clipboard.writeText(device.api_key);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
+
+    return (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+            <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }} className="relative bg-white rounded-[2.5rem] p-10 w-full max-w-sm shadow-2xl text-center">
+                <div className="absolute top-0 left-0 right-0 h-2 bg-[#A0522D] rounded-t-[2.5rem]" />
+                <h3 className="text-2xl font-black text-[#A0522D] tracking-tight mb-1 mt-2">Igikoresho Cyanditswe!</h3>
+                <p className="text-gray-500 text-sm font-medium mb-6">Tanga iki rupapuro rwa QR code umukiriya wawe.</p>
+
+                <div className="bg-gray-50 rounded-2xl p-4 inline-block mb-4">
+                    {qrDataUrl
+                        ? <img src={qrDataUrl} alt="QR Code" className="w-48 h-48" />
+                        : <div className="w-48 h-48 flex items-center justify-center"><Loader2 className="animate-spin text-[#A0522D]" size={32} /></div>
+                    }
+                </div>
+
+                <p className="text-[10px] font-black text-gray-400 tracking-widest uppercase mb-2">{device.label}</p>
+
+                <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl p-3 mb-6">
+                    <code className="flex-1 text-xs font-bold text-amber-900 break-all text-left">{device.api_key}</code>
+                    <button onClick={handleCopy} className="p-1.5 rounded-lg bg-amber-100 text-amber-700 hover:bg-amber-200 transition-colors flex-shrink-0">
+                        {copied ? <CheckCheck size={14} /> : <Copy size={14} />}
+                    </button>
+                </div>
+
+                <button
+                    onClick={() => { if (qrDataUrl) { const a = document.createElement('a'); a.href = qrDataUrl; a.download = `${device.label}-qr.png`; a.click(); } }}
+                    className="w-full py-3 rounded-2xl bg-[#A0522D] text-white font-black text-xs hover:bg-[#8b4513] transition-colors mb-3"
+                >
+                    PAKURURA QR CODE
+                </button>
+                <button onClick={onClose} className="w-full py-3 rounded-2xl bg-gray-50 text-gray-500 font-black text-xs hover:bg-gray-100 transition-colors">
+                    FUNGA
+                </button>
+            </motion.div>
         </div>
     );
 }

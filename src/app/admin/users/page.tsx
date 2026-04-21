@@ -1,10 +1,9 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Search, Plus, Video, Camera, Bell, User as UserIcon, Power, Pencil, Trash2, Loader2 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Search, Video, Camera, Bell, User as UserIcon, Power, Trash2, Loader2 } from 'lucide-react';
 import ConfirmationModal from '@/components/ui/ConfirmationModal';
+import api from '@/lib/api';
 
 interface User {
     id: string;
@@ -18,7 +17,6 @@ interface User {
 }
 
 export default function AdminUsersPage() {
-    const router = useRouter();
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -32,28 +30,9 @@ export default function AdminUsersPage() {
     }>({ isOpen: false, type: null, user: null });
 
     const fetchUsers = async () => {
-        const token = localStorage.getItem('access_token');
-        if (!token) {
-            router.push('/login');
-            return;
-        }
-
         try {
-            const response = await fetch('http://147.79.101.43:8000/users/?limit=100', {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-
-            if (response.status === 401 || response.status === 403) {
-                router.push('/login');
-                return;
-            }
-
-            const data = await response.json();
-            if (data.success) {
-                setUsers(data.data.items || []);
-            }
+            const { data } = await api.get('/users/?limit=100');
+            if (data.success) setUsers(data.data.items || []);
         } catch (err) {
             console.error("Error fetching users:", err);
         } finally {
@@ -61,29 +40,16 @@ export default function AdminUsersPage() {
         }
     };
 
-    useEffect(() => {
-        fetchUsers();
-    }, [router]);
+    useEffect(() => { fetchUsers(); }, []);
 
     const handleToggleStatus = async (user: User) => {
         setActionLoading(user.id);
-        const token = localStorage.getItem('access_token');
-        const endpoint = user.status === 'ACTIVE' ? `/deactivate` : `/activate`;
-
+        const endpoint = user.status === 'ACTIVE' ? 'deactivate' : 'activate';
         try {
-            const res = await fetch(`http://147.79.101.43:8000/users/${user.id}${endpoint}`, {
-                method: 'PATCH',
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const data = await res.json();
-            if (data.success) {
-                fetchUsers();
-            } else {
-                alert(data.message || 'Guhindura imimerere byanze');
-            }
-        } catch (error) {
-            console.error(error);
-            alert('Habaye ikibazo');
+            await api.patch(`/users/${user.id}/${endpoint}`);
+            fetchUsers();
+        } catch (error: any) {
+            alert(error.message || 'Habaye ikibazo');
         } finally {
             setActionLoading(null);
             setConfirmModal({ isOpen: false, type: null, user: null });
@@ -92,22 +58,11 @@ export default function AdminUsersPage() {
 
     const handleDeleteUser = async (user: User) => {
         setActionLoading(`delete-${user.id}`);
-        const token = localStorage.getItem('access_token');
-
         try {
-            const res = await fetch(`http://147.79.101.43:8000/users/${user.id}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const data = await res.json();
-            if (data.success) {
-                fetchUsers();
-            } else {
-                alert(data.message || 'Gusiba umukoresha byanze');
-            }
-        } catch (error) {
-            console.error(error);
-            alert('Habaye ikibazo');
+            await api.delete(`/users/${user.id}`);
+            fetchUsers();
+        } catch (error: any) {
+            alert(error.message || 'Habaye ikibazo');
         } finally {
             setActionLoading(null);
             setConfirmModal({ isOpen: false, type: null, user: null });

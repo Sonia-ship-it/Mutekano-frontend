@@ -67,7 +67,7 @@ export default function AdminTopNavbar() {
                         </div>
                         <div className="w-11 h-11 rounded-full overflow-hidden border-2 border-white/20 bg-[#5c2b14] shadow-inner">
                             <img
-                                src={currentUser?.profile_image ? (currentUser.profile_image.startsWith('http') ? currentUser.profile_image : `http://147.79.101.43:8000${currentUser.profile_image.startsWith('/') ? '' : '/'}${currentUser.profile_image}`) : `https://ui-avatars.com/api/?name=${encodeURIComponent(avatarName)}&background=8c4b2c&color=ffffff`}
+                                src={currentUser?.profile_image ? (currentUser.profile_image.startsWith('http') ? currentUser.profile_image : `${process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1/', '') || ''}${currentUser.profile_image.startsWith('/') ? '' : '/'}${currentUser.profile_image}`) : `https://ui-avatars.com/api/?name=${encodeURIComponent(avatarName)}&background=8c4b2c&color=ffffff`}
                                 alt={fullName}
                                 className="w-full h-full object-cover"
                                 onError={(e) => { e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(avatarName)}&background=8c4b2c&color=ffffff`; }}
