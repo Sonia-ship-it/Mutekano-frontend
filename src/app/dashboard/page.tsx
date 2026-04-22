@@ -119,13 +119,10 @@ export default function DashboardPage() {
                         </div>
                     </div>
 
-                    <div className="flex p-1 bg-white rounded-full shadow-sm border border-brand-brown/10 self-start md:self-auto w-full md:w-auto">
-                        <button className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 lg:px-6 py-2.5 lg:py-3 rounded-full bg-brand-text/5 text-brand-brown font-bold text-xs lg:text-sm active:scale-95 transition-transform">
+                    <div className="flex p-1 bg-white dark:bg-[#151515] rounded-full shadow-sm border border-brand-brown/10 self-start md:self-auto w-full md:w-auto transition-colors">
+                        <button className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 lg:px-6 py-2.5 lg:py-3 rounded-full bg-brand-text/5 dark:bg-white/5 text-brand-brown font-bold text-xs lg:text-sm active:scale-95 transition-transform">
                             <Shield size={16} />
-                            IRAGENZURA
-                        </button>
-                        <button className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 lg:px-6 py-2.5 lg:py-3 rounded-full text-brand-text/60 font-bold text-xs lg:text-sm hover:bg-brand-text/5 transition-all active:scale-95">
-                            HANZE
+                            {t('dash_status_activity')}
                         </button>
                     </div>
                 </motion.div>
@@ -133,9 +130,9 @@ export default function DashboardPage() {
                 {/* Stats */}
                 <motion.div variants={itemVariants} className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8 lg:mb-10">
                     <StatCard icon={<Battery className="text-yellow-500" size={20} />} label={t('dash_battery')} value="85%" iconBg="bg-yellow-100" />
-                    <StatCard icon={<Camera className="text-brand-brown" size={20} />} label={t('dash_cameras')} value={devices.length < 10 ? `0${devices.length}` : String(devices.length)} iconBg="bg-[#f0e6e1]" />
-                    <StatCard icon={<Bell className="text-blue-500" size={20} />} label={t('dash_issues')} value="02" iconBg="bg-blue-100" />
-                    <StatCard icon={<Database className="text-purple-500" size={20} />} label={t('dash_captures')} value={captureCount > 999 ? `${(captureCount / 1000).toFixed(1)}K` : String(captureCount)} iconBg="bg-purple-100" />
+                    <StatCard icon={<Camera className="text-brand-brown" size={20} />} label={t('dash_cameras')} value={devices.length < 10 ? `0${devices.length}` : String(devices.length)} iconBg="bg-[#f0e6e1]" onClick={() => router.push('/settings?tab=cameras')} />
+                    <StatCard icon={<Bell className="text-blue-500" size={20} />} label={t('dash_issues')} value="02" iconBg="bg-blue-100" onClick={() => router.push('/settings?tab=notifications')} />
+                    <StatCard icon={<Database className="text-purple-500" size={20} />} label={t('dash_captures')} value={captureCount > 999 ? `${(captureCount / 1000).toFixed(1)}K` : String(captureCount)} iconBg="bg-purple-100" onClick={() => router.push('/history')} />
                 </motion.div>
 
                 {/* Content */}
@@ -274,7 +271,7 @@ function CameraListCard({ device, isActive, onClick }: { device: Device; isActiv
     );
 }
 
-function StatCard({ icon, label, value, iconBg }: { icon: React.ReactNode; label: string; value: string; iconBg: string }) {
+function StatCard({ icon, label, value, iconBg, onClick }: { icon: React.ReactNode; label: string; value: string; iconBg: string; onClick?: () => void }) {
     const glowMap: Record<string, string> = {
         'bg-yellow-100': 'rgba(234,179,8,0.18)',
         'bg-[#f0e6e1]': 'rgba(142,82,51,0.18)',
@@ -283,6 +280,7 @@ function StatCard({ icon, label, value, iconBg }: { icon: React.ReactNode; label
     };
     return (
         <motion.div
+            onClick={onClick}
             whileHover={{ y: -6, scale: 1.03, boxShadow: `0 20px 50px ${glowMap[iconBg] || 'rgba(0,0,0,0.08)'}` }}
             transition={{ type: 'spring', stiffness: 400, damping: 20 }}
             className="relative overflow-hidden bg-gradient-to-br from-white via-white to-gray-50/80 dark:from-[#151515] dark:via-[#151515] dark:to-[#1a1a1a] rounded-[1.5rem] lg:rounded-3xl p-4 lg:p-6 border border-gray-100/80 dark:border-white/5 cursor-pointer transition-colors"

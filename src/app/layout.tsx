@@ -9,12 +9,12 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "Mutekano - Premium Security App",
-  description: "Modern agriculture and tracking system",
+  title: 'Mutekano - Umuhinzi wumutekano',
+  description: 'Mutekano Platform for managing cameras and security',
   icons: {
-    icon: '/mu.png',
-    shortcut: '/mu.png',
-    apple: '/mu.png',
+    icon: '/mu_2.jpg',
+    shortcut: '/mu_2.jpg',
+    apple: '/mu_2.jpg',
   },
 };
 

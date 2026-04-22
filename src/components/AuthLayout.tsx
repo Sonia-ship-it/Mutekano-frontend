@@ -49,11 +49,9 @@ export default function AuthLayout({
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1, duration: 0.5 }}
-                        className="flex items-center gap-3 mb-8 lg:mb-12 justify-center lg:justify-start"
+                        className="flex items-center gap-4 mb-4 justify-center lg:justify-start"
                     >
-                        <div className="bg-white/90 p-1.5 rounded-2xl shadow-xl flex items-center justify-center border border-brand-brown/10">
-                            <img src="/mu.png" alt="Mutekano Logo" className="h-14 w-auto object-contain" />
-                        </div>
+                        <img src="/mu_1.png" alt="Mutekano Logo" className="h-14 w-auto object-contain" />
                         <span className="text-xl lg:text-3xl font-black text-brand-text tracking-tight">MUTEKANO</span>
                     </motion.div>
 
