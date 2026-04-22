@@ -147,7 +147,6 @@ export default function SettingsPage() {
                                 <SettingsMenuCard
                                     icon={User}
                                     title={t('set_profile')}
-                                    value="PROFILE"
                                     isActive={activeTab === 'profile'}
                                     onClick={() => setActiveTab('profile')}
                                 />
@@ -161,21 +160,18 @@ export default function SettingsPage() {
                                 <SettingsMenuCard
                                     icon={Moon}
                                     title={t('set_theme')}
-                                    value="LIGHT"
                                     isActive={activeTab === 'theme'}
                                     onClick={() => setActiveTab('theme')}
                                 />
                                 <SettingsMenuCard
                                     icon={Bell}
                                     title={t('set_notifications')}
-                                    value="BIRAKORA"
                                     isActive={activeTab === 'notifications'}
                                     onClick={() => setActiveTab('notifications')}
                                 />
                                 <SettingsMenuCard
                                     icon={Globe}
                                     title={t('set_language')}
-                                    value="KINYARWANDA"
                                     isActive={activeTab === 'language'}
                                     onClick={() => setActiveTab('language')}
                                 />
@@ -195,7 +191,6 @@ export default function SettingsPage() {
                                 <SettingsMenuCard
                                     icon={Info}
                                     title={t('set_sys_info')}
-                                    value="V1.0.0"
                                     isActive={activeTab === 'system-info'}
                                     onClick={() => setActiveTab('system-info')}
                                 />
