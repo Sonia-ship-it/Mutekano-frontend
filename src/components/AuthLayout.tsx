@@ -51,10 +51,10 @@ export default function AuthLayout({
                         transition={{ delay: 0.1, duration: 0.5 }}
                         className="flex items-center gap-3 mb-8 lg:mb-12 justify-center lg:justify-start"
                     >
-                        <div className="bg-brand-brown p-2.5 rounded-xl shadow-lg">
-                            <Shield size={22} className="text-white" strokeWidth={2.5} />
+                        <div className="bg-white/90 p-1.5 rounded-2xl shadow-xl flex items-center justify-center border border-brand-brown/10">
+                            <img src="/mu.png" alt="Mutekano Logo" className="h-14 w-auto object-contain" />
                         </div>
-                        <span className="text-xl lg:text-2xl font-black text-brand-text tracking-tight">MUTEKANO</span>
+                        <span className="text-xl lg:text-3xl font-black text-brand-text tracking-tight">MUTEKANO</span>
                     </motion.div>
 
                     {/* Giant typography block */}

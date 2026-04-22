@@ -11,6 +11,11 @@ const outfit = Outfit({
 export const metadata: Metadata = {
   title: "Mutekano - Premium Security App",
   description: "Modern agriculture and tracking system",
+  icons: {
+    icon: '/mu.png',
+    shortcut: '/mu.png',
+    apple: '/mu.png',
+  },
 };
 
 export default function RootLayout({
@@ -19,7 +24,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${outfit.variable} font-sans h-full antialiased`}>
+    <html lang="rw" className={`${outfit.variable} font-sans h-full antialiased`}>
       <body className="min-h-full flex flex-col">
         <Providers>{children}</Providers>
       </body>

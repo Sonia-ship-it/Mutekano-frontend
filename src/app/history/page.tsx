@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, Variants } from 'framer-motion';
 import { Calendar, Filter, Search, Download, Trash2, Clock, Camera, Loader2, ImageOff } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
 import TopNavbar from '@/components/layout/TopNavbar';
 import api from '@/lib/api';
 
@@ -38,6 +39,7 @@ function formatDate(iso: string) {
 }
 
 export default function HistoryPage() {
+    const { t } = useLanguage();
     const [devices, setDevices] = useState<Device[]>([]);
     const [activeDeviceId, setActiveDeviceId] = useState<string>('all');
     const [captures, setCaptures] = useState<Capture[]>([]);
@@ -97,11 +99,11 @@ export default function HistoryPage() {
 
     const handleDelete = async (capture: Capture, e: React.MouseEvent) => {
         e.stopPropagation();
-        if (!confirm('Gusiba iki gishusho?')) return;
+        if (!confirm(t('hist_delete_confirm'))) return;
         try {
             await api.delete(`/captures/${capture.id}`);
             setCaptures(prev => prev.filter(c => c.id !== capture.id));
-        } catch {}
+        } catch { }
     };
 
     const filtered = captures.filter(c =>
@@ -115,7 +117,7 @@ export default function HistoryPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[#fcf9f8] font-sans pb-12 overflow-x-hidden">
+        <div className="min-h-screen bg-[#fcf9f8] dark:bg-[#0a0a0a] transition-colors duration-300 font-sans pb-12 overflow-x-hidden">
             <TopNavbar />
 
             <main className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pt-6 lg:pt-10">
@@ -123,8 +125,8 @@ export default function HistoryPage() {
                 {/* Header */}
                 <div className="flex flex-col lg:flex-row lg:justify-between lg:items-end mb-8 gap-6">
                     <div>
-                        <h1 className="text-4xl lg:text-[2.5rem] font-black text-brand-brown tracking-tight mb-2">Amashusho</h1>
-                        <p className="text-brand-text/70 font-bold text-sm">Reba amashusho yafashwe n'ama camera yawe.</p>
+                        <h1 className="text-4xl lg:text-[2.5rem] font-black text-brand-brown tracking-tight mb-2">{t('hist_title')}</h1>
+                        <p className="text-brand-text/70 dark:text-gray-400 font-bold text-sm">{t('hist_desc')}</p>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-3">
@@ -132,10 +134,10 @@ export default function HistoryPage() {
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-text/40" size={18} />
                             <input
                                 type="text"
-                                placeholder="Shakisha amashusho..."
+                                placeholder={t('hist_search')}
                                 value={search}
                                 onChange={e => setSearch(e.target.value)}
-                                className="w-full md:w-64 pl-12 pr-4 py-3 rounded-full bg-white border-2 border-white shadow-sm focus:outline-none focus:border-brand-brown/30 text-sm font-medium transition-all"
+                                className="w-full md:w-64 pl-12 pr-4 py-3 rounded-full bg-white dark:bg-[#151515] border-2 border-white dark:border-[#151515] shadow-sm focus:outline-none focus:border-brand-brown/30 text-sm font-medium transition-all text-brand-text dark:text-gray-200"
                             />
                         </div>
 
@@ -143,23 +145,23 @@ export default function HistoryPage() {
                         <div className="relative">
                             <button
                                 onClick={() => setShowDateFilter(v => !v)}
-                                className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold text-xs transition-all ${dateFrom || dateTo ? 'bg-brand-brown text-white' : 'bg-white border border-brand-text/5 text-brand-text shadow-sm hover:border-brand-brown/30'}`}
+                                className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold text-xs transition-all ${dateFrom || dateTo ? 'bg-brand-brown text-white' : 'bg-white dark:bg-[#151515] border border-brand-text/5 dark:border-[#333] text-brand-text dark:text-gray-200 shadow-sm hover:border-brand-brown/30'}`}
                             >
                                 <Calendar size={16} />
-                                ITARIQI
+                                {t('hist_date')}
                             </button>
                             {showDateFilter && (
-                                <div className="absolute right-0 top-14 bg-white rounded-2xl shadow-xl border border-brand-text/5 p-4 z-20 flex flex-col gap-3 w-64">
+                                <div className="absolute right-0 top-14 bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-xl border border-brand-text/5 dark:border-[#333] p-4 z-20 flex flex-col gap-3 w-64">
                                     <div>
-                                        <label className="text-[10px] font-black text-brand-text/50 tracking-widest uppercase mb-1 block">KUVA</label>
-                                        <input type="date" value={dateFrom} onChange={e => { setDateFrom(e.target.value); setPage(1); }} className="w-full px-3 py-2 rounded-xl border border-brand-text/10 text-sm font-bold outline-none focus:border-brand-brown/40" />
+                                        <label className="text-[10px] font-black text-brand-text/50 dark:text-gray-400 tracking-widest uppercase mb-1 block">{t('hist_from')}</label>
+                                        <input type="date" value={dateFrom} onChange={e => { setDateFrom(e.target.value); setPage(1); }} className="w-full px-3 py-2 rounded-xl border border-brand-text/10 dark:border-[#333] bg-white dark:bg-[#151515] text-brand-text dark:text-gray-200 text-sm font-bold outline-none focus:border-brand-brown/40" />
                                     </div>
                                     <div>
-                                        <label className="text-[10px] font-black text-brand-text/50 tracking-widest uppercase mb-1 block">KUGEZA</label>
-                                        <input type="date" value={dateTo} onChange={e => { setDateTo(e.target.value); setPage(1); }} className="w-full px-3 py-2 rounded-xl border border-brand-text/10 text-sm font-bold outline-none focus:border-brand-brown/40" />
+                                        <label className="text-[10px] font-black text-brand-text/50 dark:text-gray-400 tracking-widest uppercase mb-1 block">{t('hist_to')}</label>
+                                        <input type="date" value={dateTo} onChange={e => { setDateTo(e.target.value); setPage(1); }} className="w-full px-3 py-2 rounded-xl border border-brand-text/10 dark:border-[#333] bg-white dark:bg-[#151515] text-brand-text dark:text-gray-200 text-sm font-bold outline-none focus:border-brand-brown/40" />
                                     </div>
                                     {(dateFrom || dateTo) && (
-                                        <button onClick={() => { setDateFrom(''); setDateTo(''); setPage(1); }} className="text-xs font-black text-red-500 hover:underline">Siba filteri</button>
+                                        <button onClick={() => { setDateFrom(''); setDateTo(''); setPage(1); }} className="text-xs font-black text-red-500 hover:underline">{t('hist_clear')}</button>
                                     )}
                                 </div>
                             )}
@@ -171,15 +173,15 @@ export default function HistoryPage() {
                 <div className="flex overflow-x-auto pb-4 mb-6 gap-3 no-scrollbar">
                     <button
                         onClick={() => { setActiveDeviceId('all'); setPage(1); }}
-                        className={`whitespace-nowrap px-6 py-2 rounded-full text-xs font-bold tracking-widest uppercase transition-all ${activeDeviceId === 'all' ? 'bg-brand-brown text-white shadow-md' : 'bg-white text-brand-text/60 hover:bg-brand-text/5 shadow-sm'}`}
+                        className={`whitespace-nowrap px-6 py-2 rounded-full text-xs font-bold tracking-widest uppercase transition-all ${activeDeviceId === 'all' ? 'bg-brand-brown text-white shadow-md' : 'bg-white dark:bg-[#151515] text-brand-text/60 dark:text-gray-400 hover:bg-brand-text/5 dark:hover:bg-white/5 shadow-sm'}`}
                     >
-                        Zose
+                        {t('hist_all')}
                     </button>
                     {devices.map(device => (
                         <button
                             key={device.id}
                             onClick={() => { setActiveDeviceId(device.id); setPage(1); }}
-                            className={`whitespace-nowrap px-6 py-2 rounded-full text-xs font-bold tracking-widest uppercase transition-all ${activeDeviceId === device.id ? 'bg-brand-brown text-white shadow-md' : 'bg-white text-brand-text/60 hover:bg-brand-text/5 shadow-sm'}`}
+                            className={`whitespace-nowrap px-6 py-2 rounded-full text-xs font-bold tracking-widest uppercase transition-all ${activeDeviceId === device.id ? 'bg-brand-brown text-white shadow-md' : 'bg-white dark:bg-[#151515] text-brand-text/60 dark:text-gray-400 hover:bg-brand-text/5 dark:hover:bg-white/5 shadow-sm'}`}
                         >
                             {device.name || device.label}
                         </button>
@@ -192,9 +194,9 @@ export default function HistoryPage() {
                         <Loader2 className="animate-spin text-brand-brown" size={40} />
                     </div>
                 ) : filtered.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-32 text-brand-text/30">
+                    <div className="flex flex-col items-center justify-center py-32 text-brand-text/30 dark:text-gray-600">
                         <ImageOff size={48} className="mb-4" />
-                        <p className="font-black text-sm">Nta mashusho abonetse</p>
+                        <p className="font-black text-sm">{t('hist_empty')}</p>
                     </div>
                 ) : (
                     <motion.div
@@ -207,7 +209,7 @@ export default function HistoryPage() {
                             <motion.div
                                 key={capture.id}
                                 variants={itemVariants}
-                                className="group flex flex-col bg-white rounded-[2rem] p-4 shadow-[0_10px_30px_rgba(0,0,0,0.03)] border-4 border-white hover:border-brand-text/5 transition-all cursor-pointer"
+                                className="group flex flex-col bg-white dark:bg-[#151515] rounded-[2rem] p-4 shadow-[0_10px_30px_rgba(0,0,0,0.03)] dark:shadow-none border-4 border-white dark:border-[#151515] hover:border-brand-text/5 dark:hover:border-[#333] transition-all cursor-pointer"
                             >
                                 {/* Thumbnail */}
                                 <div className="w-full aspect-[4/3] rounded-[1.5rem] overflow-hidden relative mb-4 bg-gray-100">
@@ -228,7 +230,7 @@ export default function HistoryPage() {
                                 {/* Info */}
                                 <div className="px-2 pb-2">
                                     <div className="flex justify-between items-start mb-1">
-                                        <h3 className="font-bold text-brand-text truncate pr-2">
+                                        <h3 className="font-bold text-brand-text dark:text-gray-200 truncate pr-2">
                                             {formatDate(capture.captured_at)}
                                         </h3>
                                         <div className="flex gap-2 flex-shrink-0">
@@ -236,19 +238,19 @@ export default function HistoryPage() {
                                                 href={capture.minio_url}
                                                 download
                                                 onClick={e => e.stopPropagation()}
-                                                className="text-brand-text/30 hover:text-brand-brown transition-colors"
+                                                className="text-brand-text/30 dark:text-gray-500 hover:text-brand-brown transition-colors"
                                             >
                                                 <Download size={18} />
                                             </a>
                                             <button
                                                 onClick={e => handleDelete(capture, e)}
-                                                className="text-brand-text/30 hover:text-red-500 transition-colors"
+                                                className="text-brand-text/30 dark:text-gray-500 hover:text-red-500 transition-colors"
                                             >
                                                 <Trash2 size={18} />
                                             </button>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-2 text-[10px] font-black tracking-widest uppercase text-brand-text/50">
+                                    <div className="flex items-center gap-2 text-[10px] font-black tracking-widest uppercase text-brand-text/50 dark:text-gray-400">
                                         <Camera size={12} />
                                         {deviceName(capture.device_id)}
                                     </div>
@@ -264,17 +266,17 @@ export default function HistoryPage() {
                         <button
                             disabled={page === 1}
                             onClick={() => setPage(p => p - 1)}
-                            className="px-6 py-3 rounded-full bg-white border border-brand-text/10 font-black text-xs text-brand-text disabled:opacity-30 hover:border-brand-brown/30 transition-all"
+                            className="px-6 py-3 rounded-full bg-white dark:bg-[#151515] border border-brand-text/10 dark:border-[#333] font-black text-xs text-brand-text dark:text-gray-200 disabled:opacity-30 hover:border-brand-brown/30 transition-all"
                         >
-                            ← IBANZA
+                            {t('hist_prev')}
                         </button>
-                        <span className="text-xs font-black text-brand-text/50">{page} / {totalPages}</span>
+                        <span className="text-xs font-black text-brand-text/50 dark:text-gray-400">{page} / {totalPages}</span>
                         <button
                             disabled={page === totalPages}
                             onClick={() => setPage(p => p + 1)}
-                            className="px-6 py-3 rounded-full bg-white border border-brand-text/10 font-black text-xs text-brand-text disabled:opacity-30 hover:border-brand-brown/30 transition-all"
+                            className="px-6 py-3 rounded-full bg-white dark:bg-[#151515] border border-brand-text/10 dark:border-[#333] font-black text-xs text-brand-text dark:text-gray-200 disabled:opacity-30 hover:border-brand-brown/30 transition-all"
                         >
-                            IKURIKIRA →
+                            {t('hist_next')}
                         </button>
                     </div>
                 )}

@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUser } from '@/context/UserContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { Shield, Grid, Video, Clock, Settings, Bell, Menu, X, User as UserIcon } from 'lucide-react';
 import api from '@/lib/api';
 
@@ -17,30 +18,31 @@ interface Alert {
     created_at: string;
 }
 
-function timeAgo(iso: string) {
+function timeAgo(iso: string, t: (key: string) => string) {
     const diff = Date.now() - new Date(iso).getTime();
     const m = Math.floor(diff / 60000);
-    if (m < 1) return 'Ubu ngubu';
-    if (m < 60) return `Minota ${m} ishize`;
+    if (m < 1) return t('time_just_now');
+    if (m < 60) return t('time_mins_ago').replace('{n}', String(m));
     const h = Math.floor(m / 60);
-    if (h < 24) return `Isaha ${h} ishize`;
-    return `Iminsi ${Math.floor(h / 24)} ishize`;
+    if (h < 24) return t('time_hours_ago').replace('{n}', String(h));
+    return t('time_days_ago').replace('{n}', String(Math.floor(h / 24)));
 }
 
 export default function TopNavbar() {
     const pathname = usePathname();
     const router = useRouter();
     const { user: currentUser, logout } = useUser();
+    const { t } = useLanguage();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isNotificationOpen, setIsNotificationOpen] = useState(false);
     const [alerts, setAlerts] = useState<Alert[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
 
     const navItems = [
-        { name: 'Imbonera', path: '/dashboard', icon: Grid },
-        { name: 'Ako kanya', path: '/live', icon: Video },
-        { name: 'Amashusho', path: '/history', icon: Clock },
-        { name: 'Igenamiterere', path: '/settings', icon: Settings },
+        { name: t('nav_dashboard'), path: '/dashboard', icon: Grid },
+        { name: t('nav_live'), path: '/live', icon: Video },
+        { name: t('nav_history'), path: '/history', icon: Clock },
+        { name: t('nav_settings'), path: '/settings', icon: Settings },
     ];
 
     const fetchAlerts = useCallback(async () => {
@@ -51,7 +53,7 @@ export default function TopNavbar() {
             ]);
             if (alertsRes.data.success) setAlerts(alertsRes.data.data.items || []);
             if (countRes.data.success) setUnreadCount(countRes.data.data || 0);
-        } catch {}
+        } catch { }
     }, []);
 
     useEffect(() => {
@@ -61,13 +63,13 @@ export default function TopNavbar() {
     }, [fetchAlerts]);
 
     const handleMarkRead = async (alertId: string) => {
-        await api.patch(`/alerts/${alertId}/read`).catch(() => {});
+        await api.patch(`/alerts/${alertId}/read`).catch(() => { });
         setAlerts(prev => prev.map(a => a.id === alertId ? { ...a, is_read: true } : a));
         setUnreadCount(prev => Math.max(0, prev - 1));
     };
 
     const handleMarkAllRead = async () => {
-        await api.patch('/alerts/read-all').catch(() => {});
+        await api.patch('/alerts/read-all').catch(() => { });
         setAlerts(prev => prev.map(a => ({ ...a, is_read: true })));
         setUnreadCount(0);
     };
@@ -81,9 +83,9 @@ export default function TopNavbar() {
     return (
         <>
             <nav className="bg-brand-brown w-full h-[72px] flex items-center justify-between px-4 md:px-8 text-white sticky top-0 z-50 shadow-md">
-                <Link href="/dashboard" className="flex items-center gap-3">
-                    <div className="bg-white/20 p-1.5 md:p-2 rounded-lg">
-                        <Shield size={24} className="text-white" strokeWidth={2.5} />
+                <Link href="/dashboard" className="flex items-center gap-3 group">
+                    <div className=" p-1 md:p-1.5 rounded-xl transition-transform group-hover:scale-105">
+                        <img src="/mu.png" alt="Logo" className="h-16 w-auto" />
                     </div>
                     <span className="text-xl md:text-2xl font-black tracking-tight">Mutekano</span>
                 </Link>
@@ -128,10 +130,10 @@ export default function TopNavbar() {
                                     className="absolute top-14 right-0 w-96 bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] overflow-hidden border border-brand-text/5 text-brand-text"
                                 >
                                     <div className="p-4 bg-brand-text/5 border-b border-brand-text/5 flex justify-between items-center">
-                                        <h3 className="font-black text-brand-brown tracking-tight">Abantu Babonetse</h3>
+                                        <h3 className="font-black text-brand-brown tracking-tight">{t('nav_alerts_title')}</h3>
                                         {unreadCount > 0 && (
                                             <button onClick={handleMarkAllRead} className="text-[10px] font-bold text-brand-brown hover:underline">
-                                                Soma zose
+                                                {t('nav_alerts_read_all')}
                                             </button>
                                         )}
                                     </div>
@@ -139,7 +141,7 @@ export default function TopNavbar() {
                                     <div className="flex flex-col max-h-96 overflow-y-auto">
                                         {alerts.length === 0 ? (
                                             <div className="p-8 text-center text-brand-text/30 font-bold text-sm">
-                                                Nta makuru mashya
+                                                {t('nav_alerts_no_news')}
                                             </div>
                                         ) : alerts.map(alert => (
                                             <div
@@ -153,13 +155,13 @@ export default function TopNavbar() {
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-start justify-between gap-2">
                                                         <span className="font-bold text-sm text-brand-text leading-tight">
-                                                            👤 {alert.person_count} umuntu wabonetse
+                                                            👤 {alert.person_count} {t('nav_alerts_person_found')}
                                                         </span>
                                                         {!alert.is_read && <div className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0 mt-1 animate-pulse" />}
                                                     </div>
                                                     <span className="text-[11px] font-bold text-brand-brown">{alert.device_name || alert.device_label}</span>
                                                     <div className="flex items-center gap-2 mt-0.5">
-                                                        <span className="text-[10px] text-brand-text/40 font-bold">{timeAgo(alert.created_at)}</span>
+                                                        <span className="text-[10px] text-brand-text/40 font-bold">{timeAgo(alert.created_at, t)}</span>
                                                         <span className="text-[10px] text-brand-text/30">•</span>
                                                         <span className="text-[10px] text-brand-text/40 font-bold">{Math.round(alert.confidence * 100)}% accurate</span>
                                                     </div>
@@ -172,7 +174,7 @@ export default function TopNavbar() {
                                         onClick={() => { setIsNotificationOpen(false); router.push('/alerts'); }}
                                         className="p-3 bg-brand-text/5 hover:bg-brand-text/10 text-center cursor-pointer transition-colors"
                                     >
-                                        <span className="text-xs font-bold text-brand-brown">Reba amatangazo yose →</span>
+                                        <span className="text-xs font-bold text-brand-brown">{t('nav_alerts_view_all')}</span>
                                     </div>
                                 </motion.div>
                             )}
@@ -221,7 +223,7 @@ export default function TopNavbar() {
                         })}
                         <div className="border-t border-white/10 pt-2 mt-2">
                             <button className="w-full hover:bg-black/5 rounded-xl px-4 py-3 flex items-center gap-3 text-white/80" onClick={logout}>
-                                <span className="text-sm font-bold">Sohoka</span>
+                                <span className="text-sm font-bold">{t('nav_logout')}</span>
                             </button>
                         </div>
                     </div>

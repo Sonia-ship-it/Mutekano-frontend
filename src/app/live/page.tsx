@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion, Variants } from 'framer-motion';
 import { ArrowLeft, Wifi, Camera, RefreshCw, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useLanguage } from '@/context/LanguageContext';
 import TopNavbar from '@/components/layout/TopNavbar';
 import api from '@/lib/api';
 
@@ -56,6 +57,7 @@ function useLiveCapture(deviceId: string | null) {
 
 export default function LivePage() {
     const router = useRouter();
+    const { t } = useLanguage();
     const [devices, setDevices] = useState<Device[]>([]);
     const [activeDevice, setActiveDevice] = useState<Device | null>(null);
     const { capture, error } = useLiveCapture(activeDevice?.id ?? null);
@@ -88,7 +90,7 @@ export default function LivePage() {
     };
 
     return (
-        <div className="min-h-screen bg-white font-sans pb-12 overflow-x-hidden">
+        <div className="min-h-screen bg-white dark:bg-[#0a0a0a] transition-colors duration-300 font-sans pb-12 overflow-x-hidden">
             <TopNavbar />
 
             <motion.main
@@ -109,7 +111,7 @@ export default function LivePage() {
                         <div className="flex flex-col">
                             <div className="flex items-center gap-3">
                                 <h1 className="text-2xl md:text-3xl font-black text-brand-brown tracking-tight">
-                                    {activeDevice?.name || activeDevice?.label || 'Hitamo Camera'}
+                                    {activeDevice?.name || activeDevice?.label || t('live_choose_cam')}
                                 </h1>
                                 {activeDevice && !error && (
                                     <div className="bg-[#fdf0e9] text-brand-brown text-[9px] font-black uppercase px-3 py-1 rounded-full border border-brand-brown/20 tracking-widest flex items-center gap-1.5">
@@ -124,16 +126,16 @@ export default function LivePage() {
                                     </div>
                                 )}
                             </div>
-                            <span className="text-[10px] font-black tracking-widest text-brand-text/60 uppercase mt-1">
-                                {activeDevice?.location || 'Aho iherereye ntabwo hazwi'} • {time}
+                            <span className="text-[10px] font-black tracking-widest text-brand-text/60 dark:text-gray-400 uppercase mt-1">
+                                {activeDevice?.location || t('dash_unknown_location')} • {time}
                             </span>
                         </div>
                     </div>
 
                     <div className="flex items-center gap-3">
-                        <div className="bg-black/5 rounded-2xl px-4 py-2 flex items-center gap-2">
+                        <div className="bg-black/5 dark:bg-white/5 rounded-2xl px-4 py-2 flex items-center gap-2">
                             <Wifi size={14} className="text-brand-brown" />
-                            <span className="text-xs font-black text-brand-text">
+                            <span className="text-xs font-black text-brand-text dark:text-gray-200">
                                 {capture ? new Date(capture.captured_at).toLocaleTimeString() : '--:--:--'}
                             </span>
                         </div>
@@ -152,8 +154,8 @@ export default function LivePage() {
                     ) : (
                         <div className="w-full h-full flex flex-col items-center justify-center gap-4 text-white/40">
                             {error
-                                ? <><AlertCircle size={48} /><p className="font-black text-sm">Camera irahagaritse cyangwa nta frame ihari</p></>
-                                : <><RefreshCw size={48} className="animate-spin" /><p className="font-black text-sm">Gutegereza frame...</p></>
+                                ? <><AlertCircle size={48} /><p className="font-black text-sm">{t('live_error')}</p></>
+                                : <><RefreshCw size={48} className="animate-spin" /><p className="font-black text-sm">{t('live_waiting')}</p></>
                             }
                         </div>
                     )}
@@ -209,7 +211,7 @@ function DeviceCard({ device, isActive, onClick }: { device: Device; isActive: b
             try {
                 const { data } = await api.get(`/captures/device/${device.id}/latest`);
                 if (data.success) setCapture(data.data);
-            } catch {}
+            } catch { }
         };
         fetch_();
         const t = setInterval(fetch_, POLL_INTERVAL);
@@ -221,7 +223,7 @@ function DeviceCard({ device, isActive, onClick }: { device: Device; isActive: b
             whileHover={{ y: -4 }}
             whileTap={{ scale: 0.98 }}
             onClick={onClick}
-            className={`relative w-full aspect-[4/3] rounded-[2rem] overflow-hidden cursor-pointer shadow-lg transition-all ${isActive ? 'ring-4 ring-brand-brown ring-offset-2' : ''}`}
+            className={`relative w-full aspect-[4/3] rounded-[2rem] overflow-hidden cursor-pointer shadow-lg transition-all ${isActive ? 'ring-4 ring-brand-brown ring-offset-2 dark:ring-offset-[#0a0a0a]' : ''}`}
         >
             {capture ? (
                 <img key={capture.id} src={capture.minio_url} alt={device.name || device.label} className="w-full h-full object-cover" />

@@ -3,12 +3,14 @@
 import React, { useState, useEffect } from 'react';
 import { motion, Variants } from 'framer-motion';
 import {
-    LogOut, Shield, Moon, Bell, Clock, Camera, Wifi, RefreshCw, ChevronRight, Settings as SettingsIcon, User, Save, Loader2
+    LogOut, Shield, Moon, Bell, Clock, Camera, Wifi, RefreshCw, ChevronRight, Settings as SettingsIcon, User, Save, Loader2, Globe, Info, CheckCircle2, AlertCircle, HardDrive, LifeBuoy, Mail, Phone, ArrowLeft
 } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import TopNavbar from '@/components/layout/TopNavbar';
 import { TextInput, Button } from '@/components/ui/FormElements';
 import { useUser } from '@/context/UserContext';
+import { useTheme } from '@/context/ThemeContext';
+import { useLanguage } from '@/context/LanguageContext';
 import DevicesTab from '@/components/settings/DevicesTab';
 import api from '@/lib/api';
 
@@ -33,6 +35,8 @@ export default function SettingsPage() {
     };
 
     const { user: profile, loading: isFetching, refreshUser, logout, updateUser } = useUser();
+    const { theme, setTheme } = useTheme();
+    const { language, setLanguage, t } = useLanguage();
     const [isSaving, setIsSaving] = useState(false);
     const [formData, setFormData] = useState({ first_name: '', last_name: '', phone_number: '' });
     const [msg, setMsg] = useState({ text: '', type: '' });
@@ -108,23 +112,23 @@ export default function SettingsPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[#fcf9f8] font-sans pb-12 overflow-x-hidden">
+        <div className="min-h-screen bg-[#fcf9f8] dark:bg-[#0a0a0a] transition-colors duration-300 font-sans pb-12 overflow-x-hidden">
             <TopNavbar />
 
             <main className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pt-6 lg:pt-10">
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:justify-between md:items-end mb-8 md:mb-12 gap-4">
                     <div>
-                        <h1 className="text-4xl lg:text-[2.5rem] font-black text-brand-brown tracking-tight mb-2">Igenamiterere</h1>
-                        <p className="text-brand-text/70 font-bold text-sm">Genzura uko sisitemu yawe ikoreshwa.</p>
+                        <h1 className="text-4xl lg:text-[2.5rem] font-black text-brand-brown tracking-tight mb-2">{t('set_title')}</h1>
+                        <p className="text-brand-text/70 dark:text-gray-400 font-bold text-sm">{t('set_desc')}</p>
                     </div>
 
                     <button
                         onClick={handleLogout}
-                        className="flex items-center justify-center gap-2 px-6 py-3 bg-red-50 hover:bg-red-100 text-red-500 rounded-2xl font-bold text-sm transition-colors self-start md:self-auto shadow-sm"
+                        className="flex items-center justify-center gap-2 px-6 py-3 bg-red-50 hover:bg-red-100 dark:bg-red-500/10 dark:hover:bg-red-500/20 text-red-500 rounded-2xl font-bold text-sm transition-colors self-start md:self-auto shadow-sm"
                     >
                         <LogOut size={18} />
-                        Sohoka muri Sisitemu
+                        {t('set_logout')}
                     </button>
                 </div>
 
@@ -134,15 +138,15 @@ export default function SettingsPage() {
                         variants={containerVariants}
                         initial="hidden"
                         animate="show"
-                        className="lg:col-span-1 flex flex-col gap-8"
+                        className={`lg:col-span-1 flex flex-col gap-8 ${activeTab ? 'hidden lg:flex' : 'flex'}`}
                     >
                         {/* KONTI YANJYE */}
                         <div>
-                            <h3 className="text-[10px] lg:text-xs font-black text-brand-brown tracking-widest uppercase mb-4 pl-2 lg:pl-0">KONTI YANJYE</h3>
+                            <h3 className="text-[10px] lg:text-xs font-black text-brand-brown tracking-widest uppercase mb-4 pl-2 lg:pl-0">{t('set_my_account')}</h3>
                             <div className="flex flex-col gap-3">
                                 <SettingsMenuCard
                                     icon={User}
-                                    title="Umwirondoro"
+                                    title={t('set_profile')}
                                     value="PROFILE"
                                     isActive={activeTab === 'profile'}
                                     onClick={() => setActiveTab('profile')}
@@ -152,62 +156,54 @@ export default function SettingsPage() {
 
                         {/* SISITEMU Group */}
                         <div>
-                            <h3 className="text-[10px] lg:text-xs font-black text-brand-brown tracking-widest uppercase mb-4 pl-2 lg:pl-0">SISITEMU</h3>
+                            <h3 className="text-[10px] lg:text-xs font-black text-brand-brown tracking-widest uppercase mb-4 pl-2 lg:pl-0">{t('set_system')}</h3>
                             <div className="flex flex-col gap-3">
                                 <SettingsMenuCard
-                                    icon={Shield}
-                                    title="Uburyo bwo kurinda"
-                                    value="BIRINZWE"
-                                    isActive={activeTab === 'security'}
-                                    onClick={() => setActiveTab('security')}
-                                />
-                                <SettingsMenuCard
                                     icon={Moon}
-                                    title="Imiterere y'amabara"
-                                    value="DARK"
+                                    title={t('set_theme')}
+                                    value="LIGHT"
                                     isActive={activeTab === 'theme'}
                                     onClick={() => setActiveTab('theme')}
                                 />
                                 <SettingsMenuCard
                                     icon={Bell}
-                                    title="Integuza"
+                                    title={t('set_notifications')}
                                     value="BIRAKORA"
                                     isActive={activeTab === 'notifications'}
                                     onClick={() => setActiveTab('notifications')}
                                 />
                                 <SettingsMenuCard
-                                    icon={Clock}
-                                    title="Ububiko"
-                                    value="82%"
-                                    isActive={activeTab === 'storage'}
-                                    onClick={() => setActiveTab('storage')}
+                                    icon={Globe}
+                                    title={t('set_language')}
+                                    value="KINYARWANDA"
+                                    isActive={activeTab === 'language'}
+                                    onClick={() => setActiveTab('language')}
                                 />
                             </div>
                         </div>
 
                         {/* IBIKORESHO Group */}
                         <div>
-                            <h3 className="text-[10px] lg:text-xs font-black text-brand-brown tracking-widest uppercase mb-4 pl-2 lg:pl-0">IBIKORESHO</h3>
+                            <h3 className="text-[10px] lg:text-xs font-black text-brand-brown tracking-widest uppercase mb-4 pl-2 lg:pl-0">{t('set_devices')}</h3>
                             <div className="flex flex-col gap-3">
                                 <SettingsMenuCard
                                     icon={Camera}
-                                    title="Gucunga Camera"
+                                    title={t('set_manage_cams')}
                                     isActive={activeTab === 'cameras'}
                                     onClick={() => setActiveTab('cameras')}
                                 />
                                 <SettingsMenuCard
-                                    icon={Wifi}
-                                    title="Umuyoboro wa Wi-Fi"
-                                    value="FARM_GUEST"
-                                    isActive={activeTab === 'network'}
-                                    onClick={() => setActiveTab('network')}
+                                    icon={Info}
+                                    title={t('set_sys_info')}
+                                    value="V1.0.0"
+                                    isActive={activeTab === 'system-info'}
+                                    onClick={() => setActiveTab('system-info')}
                                 />
                                 <SettingsMenuCard
-                                    icon={RefreshCw}
-                                    title="Porogaramu ya sisitemu"
-                                    value="V2.4.1"
-                                    isActive={activeTab === 'update'}
-                                    onClick={() => setActiveTab('update')}
+                                    icon={LifeBuoy}
+                                    title={t('set_support')}
+                                    isActive={activeTab === 'support'}
+                                    onClick={() => setActiveTab('support')}
                                 />
                             </div>
                         </div>
@@ -218,20 +214,33 @@ export default function SettingsPage() {
                         variants={rightPaneVariants}
                         initial="hidden"
                         animate="show"
-                        className="lg:col-span-2 h-full min-h-[600px] bg-white rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border-4 border-white flex flex-col p-8 md:p-12 relative overflow-hidden"
+                        className={`lg:col-span-2 h-full min-h-[600px] bg-white dark:bg-[#151515] rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] dark:shadow-none border-4 border-white dark:border-[#151515] flex flex-col p-8 md:p-12 relative overflow-hidden transition-colors duration-300 ${!activeTab ? 'hidden lg:flex' : 'flex'}`}
                     >
+                        {/* Mobile Back Button */}
+                        {activeTab && (
+                            <button
+                                onClick={() => setActiveTab(null)}
+                                className="lg:hidden flex items-center gap-2 text-brand-brown font-bold mb-8 group"
+                            >
+                                <div className="w-8 h-8 bg-brand-brown/5 rounded-full flex items-center justify-center group-hover:bg-brand-brown/10 transition-colors">
+                                    <ArrowLeft size={18} />
+                                </div>
+                                <span>{t('set_back')}</span>
+                            </button>
+                        )}
+
                         {/* Subtle background glow */}
-                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[#f5ebe6] rounded-full blur-[100px] opacity-60 z-0"></div>
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[#f5ebe6] dark:bg-brand-brown/10 rounded-full blur-[100px] opacity-60 z-0 transition-colors duration-300"></div>
 
                         <div className="relative z-10 w-full h-full flex flex-col">
                             {!activeTab ? (
                                 <div className="flex-1 flex flex-col items-center justify-center text-center max-w-sm mx-auto">
-                                    <div className="w-24 h-24 bg-white rounded-3xl shadow-xl flex items-center justify-center text-brand-brown mb-8 border border-brand-text/5">
+                                    <div className="w-24 h-24 bg-white dark:bg-[#1e1e1e] rounded-3xl shadow-xl flex items-center justify-center text-brand-brown mb-8 border border-brand-text/5 dark:border-[#333]">
                                         <SettingsIcon size={40} className="animate-[spin_10s_linear_infinite]" />
                                     </div>
-                                    <h2 className="text-2xl font-black text-brand-brown tracking-tight mb-4">Hitamo Igenamiterere</h2>
-                                    <p className="text-brand-text/60 font-medium text-sm leading-relaxed">
-                                        Hitamo ikintu ushaka guhindura mu rutonde ruri ibumoso kugira ngo ubone ibisobanuro birambuye.
+                                    <h2 className="text-2xl font-black text-brand-brown tracking-tight mb-4">{t('set_select_opt')}</h2>
+                                    <p className="text-brand-text/60 dark:text-gray-400 font-medium text-sm leading-relaxed">
+                                        {t('set_select_opt_desc')}
                                     </p>
                                 </div>
                             ) : activeTab === 'profile' ? (
@@ -263,8 +272,8 @@ export default function SettingsPage() {
                                             />
                                         </div>
                                         <div>
-                                            <h2 className="text-2xl font-black text-brand-brown tracking-tight">Umwirondoro Wawe</h2>
-                                            <p className="text-brand-text/60 font-medium text-sm">Guhindura imyirondoro n'ifoto yawe bwite.</p>
+                                            <h2 className="text-2xl font-black text-brand-brown tracking-tight">{t('set_profile_title')}</h2>
+                                            <p className="text-brand-text/60 dark:text-gray-400 font-medium text-sm">{t('set_profile_desc')}</p>
                                         </div>
                                     </div>
 
@@ -273,7 +282,7 @@ export default function SettingsPage() {
                                             <Loader2 className="animate-spin text-brand-brown" size={32} />
                                         </div>
                                     ) : (
-                                        <form onSubmit={handleSaveProfile} className="space-y-5 bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-sm relative z-20">
+                                        <form onSubmit={handleSaveProfile} className="space-y-5 bg-white dark:bg-[#1e1e1e] p-6 md:p-8 rounded-3xl border border-gray-100 dark:border-[#333] shadow-sm relative z-20 transition-colors">
                                             {msg.text && (
                                                 <div className={`p-4 rounded-xl text-sm font-bold ${msg.type === 'success' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
                                                     {msg.text}
@@ -317,18 +326,208 @@ export default function SettingsPage() {
                                             <div className="pt-4 flex justify-end">
                                                 <Button type="submit" disabled={isSaving} className="px-8 flex-none w-max">
                                                     {isSaving ? <Loader2 size={18} className="animate-spin inline mr-2" /> : <Save size={18} className="inline mr-2" />}
-                                                    {isSaving ? 'Birabikwa...' : 'Bika Impinduka'}
+                                                    {isSaving ? t('set_saving') : t('set_save')}
                                                 </Button>
                                             </div>
                                         </form>
                                     )}
                                 </div>
+                            ) : activeTab === 'theme' ? (
+                                <div className="w-full max-w-xl mx-auto">
+                                    <h2 className="text-2xl font-black text-brand-brown tracking-tight mb-2">{t('set_theme')}</h2>
+                                    <p className="text-brand-text/60 font-medium text-sm mb-8">Hitamo uburyo ushaka ko sisitemu igaragara.</p>
+
+                                    <div className="space-y-4">
+                                        <div onClick={() => setTheme('light')} className={`flex items-center justify-between p-6 bg-white dark:bg-[#1e1e1e] rounded-3xl border shadow-sm cursor-pointer transition-colors ${theme === 'light' ? 'border-brand-brown' : 'border-gray-100 dark:border-[#333]'}`}>
+                                            <div>
+                                                <h4 className="font-bold text-brand-brown">{t('set_theme_light')}</h4>
+                                                <p className="text-xs text-brand-text/60 dark:text-gray-400">{t('set_theme_light_desc')}</p>
+                                            </div>
+                                            <div className={`w-12 h-6 rounded-full relative transition-colors ${theme === 'light' ? 'bg-brand-brown' : 'bg-gray-200 dark:bg-gray-700'}`}>
+                                                <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${theme === 'light' ? 'right-1' : 'left-1'}`}></div>
+                                            </div>
+                                        </div>
+                                        <div onClick={() => setTheme('dark')} className={`flex items-center justify-between p-6 bg-white dark:bg-[#1e1e1e] rounded-3xl border shadow-sm cursor-pointer transition-colors ${theme === 'dark' ? 'border-brand-brown' : 'border-gray-100 dark:border-[#333]'}`}>
+                                            <div>
+                                                <h4 className="font-bold text-brand-brown">{t('set_theme_dark')}</h4>
+                                                <p className="text-xs text-brand-text/60 dark:text-gray-400">{t('set_theme_dark_desc')}</p>
+                                            </div>
+                                            <div className={`w-12 h-6 rounded-full relative transition-colors ${theme === 'dark' ? 'bg-brand-brown' : 'bg-gray-200 dark:bg-gray-700'}`}>
+                                                <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${theme === 'dark' ? 'right-1' : 'left-1'}`}></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : activeTab === 'notifications' ? (
+                                <div className="w-full max-w-xl mx-auto">
+                                    <h2 className="text-2xl font-black text-brand-brown tracking-tight mb-2">{t('set_notifications')}</h2>
+                                    <p className="text-brand-text/60 dark:text-gray-400 font-medium text-sm mb-8">{t('set_notif_desc')}</p>
+
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between p-6 bg-white dark:bg-[#1e1e1e] rounded-3xl border border-gray-100 dark:border-[#333] shadow-sm transition-colors">
+                                            <div>
+                                                <h4 className="font-bold text-brand-brown">{t('set_notif_email')}</h4>
+                                                <p className="text-xs text-brand-text/60 dark:text-gray-400">{t('set_notif_email_desc')}</p>
+                                            </div>
+                                            <div className="w-12 h-6 bg-brand-brown rounded-full relative cursor-pointer">
+                                                <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full"></div>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center justify-between p-6 bg-white dark:bg-[#1e1e1e] rounded-3xl border border-gray-100 dark:border-[#333] shadow-sm transition-colors">
+                                            <div>
+                                                <h4 className="font-bold text-brand-brown">{t('set_notif_sys')}</h4>
+                                                <p className="text-xs text-brand-text/60 dark:text-gray-400">{t('set_notif_sys_desc')}</p>
+                                            </div>
+                                            <div className="w-12 h-6 bg-brand-brown rounded-full relative cursor-pointer">
+                                                <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : activeTab === 'language' ? (
+                                <div className="w-full max-w-xl mx-auto">
+                                    <h2 className="text-2xl font-black text-brand-brown tracking-tight mb-2">{t('set_language')}</h2>
+                                    <p className="text-brand-text/60 dark:text-gray-400 font-medium text-sm mb-8">{t('set_lang_desc')}</p>
+
+                                    <div className="space-y-3">
+                                        <div onClick={() => setLanguage('rw')} className={`flex items-center justify-between p-5 bg-white dark:bg-[#1e1e1e] rounded-2xl border-2 shadow-sm cursor-pointer transition-colors ${language === 'rw' ? 'border-brand-brown' : 'border-transparent hover:border-gray-200 dark:hover:border-[#333] opacity-70'}`}>
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-10 h-10 bg-brand-brown/10 rounded-full flex items-center justify-center text-brand-brown font-black">RW</div>
+                                                <span className={`font-bold ${language === 'rw' ? 'text-brand-brown' : 'text-brand-text dark:text-gray-300'}`}>Kinyarwanda</span>
+                                            </div>
+                                            <div className={`w-5 h-5 rounded-full border-4 ${language === 'rw' ? 'border-brand-brown bg-white dark:bg-[#1e1e1e]' : 'border-gray-300 dark:border-gray-600 bg-transparent'} transition-colors`}></div>
+                                        </div>
+                                        <div onClick={() => setLanguage('en')} className={`flex items-center justify-between p-5 bg-white dark:bg-[#1e1e1e] rounded-2xl border-2 shadow-sm cursor-pointer transition-colors ${language === 'en' ? 'border-brand-brown' : 'border-transparent hover:border-gray-200 dark:hover:border-[#333] opacity-70'}`}>
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 font-black">EN</div>
+                                                <span className={`font-bold ${language === 'en' ? 'text-brand-brown' : 'text-brand-text dark:text-gray-300'}`}>English</span>
+                                            </div>
+                                            <div className={`w-5 h-5 rounded-full border-4 ${language === 'en' ? 'border-brand-brown bg-white dark:bg-[#1e1e1e]' : 'border-gray-300 dark:border-gray-600 bg-transparent'} transition-colors`}></div>
+                                        </div>
+                                        <div onClick={() => setLanguage('fr')} className={`flex items-center justify-between p-5 bg-white dark:bg-[#1e1e1e] rounded-2xl border-2 shadow-sm cursor-pointer transition-colors ${language === 'fr' ? 'border-brand-brown' : 'border-transparent hover:border-gray-200 dark:hover:border-[#333] opacity-70'}`}>
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 font-black">FR</div>
+                                                <span className={`font-bold ${language === 'fr' ? 'text-brand-brown' : 'text-brand-text dark:text-gray-300'}`}>Français</span>
+                                            </div>
+                                            <div className={`w-5 h-5 rounded-full border-4 ${language === 'fr' ? 'border-brand-brown bg-white dark:bg-[#1e1e1e]' : 'border-gray-300 dark:border-gray-600 bg-transparent'} transition-colors`}></div>
+                                        </div>
+                                    </div>
+                                </div>
                             ) : activeTab === 'cameras' ? (
                                 <DevicesTab />
+                            ) : activeTab === 'system-info' ? (
+                                <div className="w-full max-w-xl mx-auto">
+                                    <h2 className="text-2xl font-black text-brand-brown tracking-tight mb-2">{t('set_sys_info')}</h2>
+                                    <p className="text-brand-text/60 dark:text-gray-400 font-medium text-sm mb-8">{t('set_info_desc')}</p>
+
+                                    <div className="space-y-4">
+                                        {/* 1. System Status */}
+                                        <div className="flex items-center justify-between p-6 bg-white dark:bg-[#1e1e1e] rounded-3xl border border-gray-100 dark:border-[#333] shadow-sm transition-colors">
+                                            <div>
+                                                <h4 className="font-bold text-brand-brown">{t('set_info_sys')}</h4>
+                                                <p className="text-xs text-green-600 font-bold">{t('set_info_sys_good')}</p>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-[10px] font-black text-green-600 uppercase">ACTIVE</span>
+                                                <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                                            </div>
+                                        </div>
+
+                                        {/* 2. Camera Status */}
+                                        <div className="flex items-center justify-between p-6 bg-white dark:bg-[#1e1e1e] rounded-3xl border border-gray-100 dark:border-[#333] shadow-sm transition-colors">
+                                            <div>
+                                                <h4 className="font-bold text-brand-brown">{t('set_info_cam')}</h4>
+                                                <p className="text-xs text-brand-text/60 dark:text-gray-400">{t('set_info_cam_good')}</p>
+                                            </div>
+                                            <div className="w-12 h-6 bg-brand-brown rounded-full relative">
+                                                <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full"></div>
+                                            </div>
+                                        </div>
+
+                                        {/* 3. Connection Status */}
+                                        <div className="flex items-center justify-between p-6 bg-white dark:bg-[#1e1e1e] rounded-3xl border border-gray-100 dark:border-[#333] shadow-sm transition-colors">
+                                            <div>
+                                                <h4 className="font-bold text-brand-brown">{t('set_info_net')}</h4>
+                                                <p className="text-xs text-brand-text/60 dark:text-gray-400">{t('set_info_net_good')}</p>
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                                <Wifi size={18} className="text-blue-500" />
+                                                <span className="text-[10px] font-black text-blue-600">ONLINE</span>
+                                            </div>
+                                        </div>
+
+                                        {/* 4. Last Activity */}
+                                        <div className="flex items-center justify-between p-6 bg-white dark:bg-[#1e1e1e] rounded-3xl border border-gray-100 dark:border-[#333] shadow-sm transition-colors">
+                                            <div>
+                                                <h4 className="font-bold text-brand-brown">{t('set_info_last')}</h4>
+                                                <p className="text-xs text-brand-text/60 dark:text-gray-400">{t('set_info_last_val')}</p>
+                                            </div>
+                                            <Clock size={18} className="text-brand-brown/40" />
+                                        </div>
+
+                                        {/* 5. Storage Status */}
+                                        <div className="p-6 bg-white dark:bg-[#1e1e1e] rounded-3xl border border-gray-100 dark:border-[#333] shadow-sm transition-colors">
+                                            <div className="flex items-center justify-between mb-3">
+                                                <div>
+                                                    <h4 className="font-bold text-brand-brown">{t('set_info_storage')}</h4>
+                                                    <p className="text-xs text-brand-text/60 dark:text-gray-400">{t('set_info_storage_val')}</p>
+                                                </div>
+                                                <span className="text-sm font-black text-brand-brown">82%</span>
+                                            </div>
+                                            <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                                <div className="w-[82%] h-full bg-brand-brown rounded-full"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-8 p-6 bg-green-50/30 rounded-3xl border-2 border-dashed border-green-500/20 italic text-center">
+                                        <p className="text-sm text-green-700/70 font-medium">{t('set_info_footer')}</p>
+                                    </div>
+                                </div>
+                            ) : activeTab === 'support' ? (
+                                <div className="w-full max-w-xl mx-auto">
+                                    <h2 className="text-2xl font-black text-brand-brown tracking-tight mb-2">{t('set_support')}</h2>
+                                    <p className="text-brand-text/60 dark:text-gray-400 font-medium text-sm mb-8">{t('set_support_desc')}</p>
+
+                                    <div className="space-y-4">
+                                        {/* Phone Contact */}
+                                        <div className="flex items-center justify-between p-6 bg-white dark:bg-[#1e1e1e] rounded-3xl border border-gray-100 dark:border-[#333] shadow-sm transition-colors">
+                                            <div>
+                                                <h4 className="font-bold text-brand-brown">{t('set_phone')}</h4>
+                                                <p className="text-xs text-brand-text/60 dark:text-gray-400">+250 795 300 840</p>
+                                            </div>
+                                            <a href="tel:+250795300840" className="w-10 h-10 bg-green-50 rounded-full flex items-center justify-center text-green-600 shadow-sm hover:bg-green-100 transition-colors">
+                                                <Phone size={18} />
+                                            </a>
+                                        </div>
+
+                                        {/* Email 1 */}
+                                        <div className="flex items-center justify-between p-6 bg-white dark:bg-[#1e1e1e] rounded-3xl border border-gray-100 dark:border-[#333] shadow-sm transition-colors">
+                                            <div>
+                                                <h4 className="font-bold text-brand-brown underline decoration-brand-brown/20 uppercase text-[10px] tracking-widest mb-1">DEV 1</h4>
+                                                <p className="text-sm font-bold text-brand-brown">sibomanaedouard974@gmail.com</p>
+                                            </div>
+                                            <div className="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center text-blue-600 shadow-sm">
+                                                <Mail size={18} />
+                                            </div>
+                                        </div>
+
+                                        {/* Email 2 */}
+                                        <div className="flex items-center justify-between p-6 bg-white dark:bg-[#1e1e1e] rounded-3xl border border-gray-100 dark:border-[#333] shadow-sm transition-colors">
+                                            <div>
+                                                <h4 className="font-bold text-brand-brown underline decoration-brand-brown/20 uppercase text-[10px] tracking-widest mb-1">DEV 2</h4>
+                                                <p className="text-sm font-bold text-brand-brown">uwasesonia43@gmail.com</p>
+                                            </div>
+                                            <div className="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center text-blue-600 shadow-sm">
+                                                <Mail size={18} />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             ) : (
                                 <div className="flex-1 flex flex-col items-center justify-center text-center">
                                     <h2 className="text-xl font-black text-brand-brown tracking-tight mb-2 uppercase">Igenamiterere: {activeTab}</h2>
-                                    <p className="text-brand-text/60 font-medium text-sm">Aha hazajya igenamiterere rijyanye na {activeTab}.</p>
+                                    <p className="text-brand-text/60 dark:text-gray-400 font-medium text-sm">Aha hazajya igenamiterere rijyanye na {activeTab}.</p>
                                 </div>
                             )}
                         </div>
@@ -350,21 +549,21 @@ function SettingsMenuCard({
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={onClick}
-            className={`w-full bg-white rounded-2xl p-4 md:p-5 flex items-center justify-between transition-all ${isActive
-                ? 'shadow-[0_10px_25px_rgba(142,82,51,0.15)] border-2 border-brand-brown'
-                : 'shadow-[0_5px_15px_rgba(0,0,0,0.03)] border-2 border-transparent hover:border-brand-brown/20'
+            className={`w-full bg-white dark:bg-[#151515] rounded-2xl p-4 md:p-5 flex items-center justify-between transition-all ${isActive
+                ? 'shadow-[0_10px_25px_rgba(142,82,51,0.15)] dark:shadow-none border-2 border-brand-brown dark:bg-[#1e1e1e]'
+                : 'shadow-[0_5px_15px_rgba(0,0,0,0.03)] dark:shadow-none border-2 border-transparent hover:border-brand-brown/20 hover:dark:bg-[#1e1e1e]'
                 }`}
         >
             <div className="flex items-center gap-4">
-                <Icon size={20} className={isActive ? 'text-brand-brown' : 'text-brand-text/50'} strokeWidth={isActive ? 2.5 : 2} />
+                <Icon size={20} className={isActive ? 'text-brand-brown' : 'text-brand-text/50 dark:text-gray-500'} strokeWidth={isActive ? 2.5 : 2} />
                 <div className="flex flex-col items-start gap-0.5">
-                    <span className={`font-bold text-sm ${isActive ? 'text-brand-brown' : 'text-brand-text'}`}>{title}</span>
+                    <span className={`font-bold text-sm ${isActive ? 'text-brand-brown' : 'text-brand-text dark:text-gray-200'}`}>{title}</span>
                     {value && (
-                        <span className="text-[9px] font-black tracking-widest text-brand-text/60 uppercase">{value}</span>
+                        <span className="text-[9px] font-black tracking-widest text-brand-text/60 dark:text-gray-500 uppercase">{value}</span>
                     )}
                 </div>
             </div>
-            <ChevronRight size={18} className={isActive ? 'text-brand-brown' : 'text-brand-text/30'} />
+            <ChevronRight size={18} className={isActive ? 'text-brand-brown' : 'text-brand-text/30 dark:text-gray-600'} />
         </motion.button>
     );
 }

@@ -25,9 +25,9 @@ export default function AdminTopNavbar() {
         <>
             <nav className="bg-gradient-to-r from-[#a65f3c] via-[#a86544] to-[#8c4b2c] w-full h-[80px] flex items-center justify-between px-6 md:px-10 text-white sticky top-0 z-50">
                 {/* Logo */}
-                <Link href="/admin/users" className="flex items-center gap-3">
-                    <div className="bg-white/20 p-2 rounded-xl">
-                        <Shield size={24} className="text-white" strokeWidth={2.5} />
+                <Link href="/admin/users" className="flex items-center gap-3 group">
+                    <div className=" p-1 md:p-1.5 rounded-xl transition-transform group-hover:scale-105">
+                        <img src="/mu.png" alt="Logo" className="h-16 w-auto" />
                     </div>
                     <span className="text-xl md:text-2xl font-black tracking-tight">Mutekano</span>
                 </Link>

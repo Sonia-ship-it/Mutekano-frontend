@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, Variants } from 'framer-motion';
 import { useUser } from '@/context/UserContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { useRouter } from 'next/navigation';
 import {
     Shield, Video, Bell, Battery, Camera, Database,
@@ -55,6 +56,7 @@ function useLatestCapture(deviceId: string | null) {
 
 export default function DashboardPage() {
     const { user: currentUser } = useUser();
+    const { t } = useLanguage();
     const router = useRouter();
     const [devices, setDevices] = useState<Device[]>([]);
     const [primaryDevice, setPrimaryDevice] = useState<Device | null>(null);
@@ -94,7 +96,7 @@ export default function DashboardPage() {
     };
 
     return (
-        <div className="min-h-screen bg-white font-sans pb-12 overflow-x-hidden">
+        <div className="min-h-screen bg-white dark:bg-[#0a0a0a] font-sans pb-12 overflow-x-hidden transition-colors duration-300">
             <TopNavbar />
 
             <motion.main
@@ -106,13 +108,13 @@ export default function DashboardPage() {
                 {/* Header */}
                 <motion.div variants={itemVariants} className="flex flex-col md:flex-row md:justify-between md:items-end mb-6 lg:mb-8 gap-4">
                     <div>
-                        <h1 className="text-4xl lg:text-5xl font-black text-brand-text tracking-tight mb-2">
-                            <span className="font-extrabold text-brand-text/80">Muraho, </span>{firstName}
+                        <h1 className="text-4xl lg:text-5xl font-black text-brand-text dark:text-gray-100 tracking-tight mb-2">
+                            <span className="font-extrabold text-brand-text/80 dark:text-gray-300">{t('dash_hello')}</span>{firstName}
                         </h1>
-                        <div className="flex items-center gap-2 mt-2 bg-white/50 w-max px-3 py-1.5 rounded-full border border-brand-text/5">
-                            <div className={`w-2.5 h-2.5 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)] ${primaryOnline ? 'bg-green-500' : 'bg-gray-300'}`} />
-                            <span className="text-[10px] lg:text-xs font-bold tracking-widest text-brand-text/70 uppercase">
-                                {primaryOnline ? 'SISTEMU IRINZWE' : 'NTAMAKURU MASHYA'}
+                        <div className="flex items-center gap-2 mt-2 bg-white/50 dark:bg-white/5 w-max px-3 py-1.5 rounded-full border border-brand-text/5 dark:border-white/10">
+                            <div className={`w-2.5 h-2.5 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)] ${primaryOnline ? 'bg-green-500' : 'bg-gray-400'}`} />
+                            <span className="text-[10px] lg:text-xs font-bold tracking-widest text-brand-text/70 dark:text-gray-300 uppercase">
+                                {primaryOnline ? t('dash_system_secure') : t('dash_no_news')}
                             </span>
                         </div>
                     </div>
@@ -130,10 +132,10 @@ export default function DashboardPage() {
 
                 {/* Stats */}
                 <motion.div variants={itemVariants} className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8 lg:mb-10">
-                    <StatCard icon={<Battery className="text-yellow-500" size={20} />} label="BATERI" value="85%" iconBg="bg-yellow-100" />
-                    <StatCard icon={<Camera className="text-brand-brown" size={20} />} label="KAMERA" value={devices.length < 10 ? `0${devices.length}` : String(devices.length)} iconBg="bg-[#f0e6e1]" />
-                    <StatCard icon={<Bell className="text-blue-500" size={20} />} label="IBIBAZO BYABAYE" value="02" iconBg="bg-blue-100" />
-                    <StatCard icon={<Database className="text-purple-500" size={20} />} label="AMASHUSHO" value={captureCount > 999 ? `${(captureCount / 1000).toFixed(1)}K` : String(captureCount)} iconBg="bg-purple-100" />
+                    <StatCard icon={<Battery className="text-yellow-500" size={20} />} label={t('dash_battery')} value="85%" iconBg="bg-yellow-100" />
+                    <StatCard icon={<Camera className="text-brand-brown" size={20} />} label={t('dash_cameras')} value={devices.length < 10 ? `0${devices.length}` : String(devices.length)} iconBg="bg-[#f0e6e1]" />
+                    <StatCard icon={<Bell className="text-blue-500" size={20} />} label={t('dash_issues')} value="02" iconBg="bg-blue-100" />
+                    <StatCard icon={<Database className="text-purple-500" size={20} />} label={t('dash_captures')} value={captureCount > 999 ? `${(captureCount / 1000).toFixed(1)}K` : String(captureCount)} iconBg="bg-purple-100" />
                 </motion.div>
 
                 {/* Content */}
@@ -142,9 +144,9 @@ export default function DashboardPage() {
                     {/* Main live viewer */}
                     <motion.div variants={itemVariants} className="lg:col-span-2">
                         <div className="mb-4">
-                            <h2 className="text-2xl lg:text-3xl font-black text-brand-brown tracking-tight mb-1">Tekana</h2>
-                            <p className="text-brand-text/70 text-xs lg:text-sm font-medium">
-                                Kurikirana urugo rwawe aho uri hose iwawe harinzwe. Sisitemu yizewe igufasha kucunga urugo rwawe.
+                            <h2 className="text-2xl lg:text-3xl font-black text-brand-brown tracking-tight mb-1">{t('dash_secure_title')}</h2>
+                            <p className="text-brand-text/70 dark:text-gray-400 text-xs lg:text-sm font-medium">
+                                {t('dash_secure_desc')}
                             </p>
                         </div>
 
@@ -171,7 +173,7 @@ export default function DashboardPage() {
                             <div className="absolute top-4 left-4 lg:top-6 lg:left-6 bg-black/40 backdrop-blur-md rounded-full px-3 py-1.5 lg:px-4 lg:py-2 flex items-center gap-2 border border-white/10">
                                 <div className={`w-1.5 h-1.5 lg:w-2 lg:h-2 rounded-full ${primaryOnline ? 'bg-red-500 animate-pulse' : 'bg-gray-400'}`} />
                                 <span className="text-white text-[10px] lg:text-xs font-bold tracking-widest">
-                                    {primaryOnline ? 'AKO KANYA' : 'OFFLINE'}
+                                    {primaryOnline ? t('dash_live_badge') : t('dash_offline_badge')}
                                 </span>
                             </div>
 
@@ -182,7 +184,7 @@ export default function DashboardPage() {
                                         {primaryDevice?.name || primaryDevice?.label || '...'}
                                     </h3>
                                     <p className="text-white/70 font-medium text-xs lg:text-sm">
-                                        {primaryDevice?.location || 'Aho iherereye ntabwo hazwi'}
+                                        {primaryDevice?.location || t('dash_unknown_location')}
                                     </p>
                                 </div>
                                 <div className="w-12 h-12 lg:w-16 lg:h-16 bg-brand-brown group-hover:bg-brand-brown-dark transition-colors rounded-xl lg:rounded-2xl flex items-center justify-center text-white shadow-lg">
@@ -196,29 +198,29 @@ export default function DashboardPage() {
                     <motion.div variants={itemVariants} className="lg:col-span-1 flex flex-col gap-6">
 
                         {/* System status */}
-                        <div className="bg-white rounded-[1.5rem] lg:rounded-[2rem] p-6 lg:p-8 shadow-[0_10px_30px_rgba(0,0,0,0.03)] border-4 border-white">
-                            <h3 className="text-[10px] lg:text-xs font-bold text-brand-text/60 tracking-widest uppercase mb-4 lg:mb-6">IMITERERE YA SISITEMU</h3>
+                        <div className="bg-white dark:bg-[#151515] rounded-[1.5rem] lg:rounded-[2rem] p-6 lg:p-8 shadow-[0_10px_30px_rgba(0,0,0,0.03)] dark:shadow-none border-4 border-white dark:border-[#151515] transition-colors">
+                            <h3 className="text-[10px] lg:text-xs font-bold text-brand-text/60 dark:text-gray-400 tracking-widest uppercase mb-4 lg:mb-6">{t('dash_sys_status')}</h3>
                             <div className="flex flex-col gap-5 lg:gap-6">
-                                <StatusRow icon={<Activity size={18} className="text-blue-500" />} label="Ibikorwa" value="BISANZWE" />
-                                <StatusRow icon={<Wifi size={18} className={primaryOnline ? 'text-green-500' : 'text-gray-400'} />} label="Umuyoboro" value={primaryOnline ? 'NZIZA' : 'NTIRABONEKA'} />
-                                <StatusRow icon={<Shield size={18} className="text-brand-brown" />} label="Umutekano" value="A+" />
+                                <StatusRow icon={<Activity size={18} className="text-blue-500" />} label={t('dash_status_activity')} value={t('dash_status_normal')} />
+                                <StatusRow icon={<Wifi size={18} className={primaryOnline ? 'text-green-500' : 'text-gray-400'} />} label={t('dash_status_network')} value={primaryOnline ? t('dash_status_good') : t('dash_status_bad')} />
+                                <StatusRow icon={<Shield size={18} className="text-brand-brown" />} label={t('dash_status_security')} value="A+" />
                             </div>
                         </div>
 
                         {/* Other cameras */}
-                        <div className="bg-white rounded-[1.5rem] lg:rounded-[2rem] p-6 lg:p-8 shadow-[0_10px_30px_rgba(0,0,0,0.03)] border-4 border-white flex-1">
+                        <div className="bg-white dark:bg-[#151515] rounded-[1.5rem] lg:rounded-[2rem] p-6 lg:p-8 shadow-[0_10px_30px_rgba(0,0,0,0.03)] dark:shadow-none border-4 border-white dark:border-[#151515] flex-1 transition-colors">
                             <div className="flex justify-between items-center mb-4 lg:mb-6">
-                                <h3 className="text-[10px] lg:text-xs font-bold text-brand-text/60 tracking-widest uppercase">IZINDI CAMERA</h3>
+                                <h3 className="text-[10px] lg:text-xs font-bold text-brand-text/60 dark:text-gray-400 tracking-widest uppercase">{t('dash_other_cams')}</h3>
                                 <span
                                     onClick={() => router.push('/live')}
                                     className="text-[10px] font-bold text-brand-brown tracking-widest uppercase cursor-pointer hover:underline underline-offset-4"
                                 >
-                                    ZOSE
+                                    {t('dash_all')}
                                 </span>
                             </div>
 
                             {devices.length === 0 ? (
-                                <p className="text-xs font-bold text-brand-text/30 text-center py-4">Nta camera ihari</p>
+                                <p className="text-xs font-bold text-brand-text/30 dark:text-gray-500 text-center py-4">{t('dash_no_cams')}</p>
                             ) : (
                                 <div className="flex flex-col gap-3 lg:gap-4">
                                     {devices.map(device => (
@@ -241,11 +243,12 @@ export default function DashboardPage() {
 
 function CameraListCard({ device, isActive, onClick }: { device: Device; isActive: boolean; onClick: () => void }) {
     const { capture, online } = useLatestCapture(device.id);
+    const { t } = useLanguage();
 
     return (
         <div
             onClick={onClick}
-            className={`group flex items-center justify-between p-2 -mx-2 rounded-2xl hover:bg-brand-text/5 transition-colors cursor-pointer ${isActive ? 'bg-brand-brown/5' : ''}`}
+            className={`group flex items-center justify-between p-2 -mx-2 rounded-2xl hover:bg-brand-text/5 dark:hover:bg-white/5 transition-colors cursor-pointer ${isActive ? 'bg-brand-brown/5 dark:bg-white/5' : ''}`}
         >
             <div className="flex items-center gap-3 lg:gap-4">
                 <div className="w-16 h-10 lg:w-20 lg:h-12 rounded-xl shadow-sm overflow-hidden relative bg-gray-900 flex-shrink-0">
@@ -258,7 +261,7 @@ function CameraListCard({ device, isActive, onClick }: { device: Device; isActiv
                     )}
                 </div>
                 <div className="flex flex-col">
-                    <span className="font-bold text-brand-text text-xs lg:text-sm mb-0.5 group-hover:text-brand-brown transition-colors truncate max-w-[120px]">
+                    <span className="font-bold text-brand-text dark:text-gray-200 text-xs lg:text-sm mb-0.5 group-hover:text-brand-brown dark:group-hover:text-brand-brown transition-colors truncate max-w-[120px]">
                         {device.name || device.label}
                     </span>
                     <span className={`text-[8px] lg:text-[10px] font-black tracking-widest uppercase ${online ? 'text-green-500' : 'text-red-400'}`}>
@@ -266,7 +269,7 @@ function CameraListCard({ device, isActive, onClick }: { device: Device; isActiv
                     </span>
                 </div>
             </div>
-            <ChevronRight size={16} className="text-brand-text/30 group-hover:text-brand-brown transition-colors mr-1 group-hover:translate-x-1" />
+            <ChevronRight size={16} className="text-brand-text/30 dark:text-gray-600 group-hover:text-brand-brown transition-colors mr-1 group-hover:translate-x-1" />
         </div>
     );
 }
@@ -282,15 +285,15 @@ function StatCard({ icon, label, value, iconBg }: { icon: React.ReactNode; label
         <motion.div
             whileHover={{ y: -6, scale: 1.03, boxShadow: `0 20px 50px ${glowMap[iconBg] || 'rgba(0,0,0,0.08)'}` }}
             transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-            className="relative overflow-hidden bg-gradient-to-br from-white via-white to-gray-50/80 rounded-[1.5rem] lg:rounded-3xl p-4 lg:p-6 border border-gray-100/80 cursor-pointer"
+            className="relative overflow-hidden bg-gradient-to-br from-white via-white to-gray-50/80 dark:from-[#151515] dark:via-[#151515] dark:to-[#1a1a1a] rounded-[1.5rem] lg:rounded-3xl p-4 lg:p-6 border border-gray-100/80 dark:border-white/5 cursor-pointer transition-colors"
             style={{ boxShadow: '0 4px 6px rgba(0,0,0,0.04), 0 10px 24px rgba(0,0,0,0.06)' }}
         >
-            <div className="absolute -top-12 -right-12 w-28 h-28 rounded-full bg-gradient-to-br from-white/60 to-transparent blur-2xl pointer-events-none" />
+            <div className="absolute -top-12 -right-12 w-28 h-28 rounded-full bg-gradient-to-br from-white/60 dark:from-white/5 to-transparent blur-2xl pointer-events-none" />
             <div className={`w-10 h-10 lg:w-12 lg:h-12 rounded-[1rem] lg:rounded-2xl ${iconBg} flex items-center justify-center mb-3 lg:mb-4`}>
                 {icon}
             </div>
-            <div className="text-[8px] lg:text-[10px] font-bold text-brand-text/50 tracking-widest uppercase mb-0.5 lg:mb-1">{label}</div>
-            <div className="text-2xl lg:text-3xl font-black text-brand-text tracking-tight">{value}</div>
+            <div className="text-[8px] lg:text-[10px] font-bold text-brand-text/50 dark:text-gray-400 tracking-widest uppercase mb-0.5 lg:mb-1">{label}</div>
+            <div className="text-2xl lg:text-3xl font-black text-brand-text dark:text-gray-100 tracking-tight">{value}</div>
         </motion.div>
     );
 }
@@ -299,10 +302,10 @@ function StatusRow({ icon, label, value }: { icon: React.ReactNode; label: strin
     return (
         <div className="flex items-center justify-between group cursor-pointer">
             <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-brand-text/5 group-hover:bg-brand-text/10 transition-colors">{icon}</div>
-                <span className="font-bold text-brand-text text-xs lg:text-sm group-hover:text-brand-brown transition-colors">{label}</span>
+                <div className="p-2 rounded-lg bg-brand-text/5 dark:bg-white/5 group-hover:bg-brand-text/10 dark:group-hover:bg-white/10 transition-colors">{icon}</div>
+                <span className="font-bold text-brand-text dark:text-gray-200 text-xs lg:text-sm group-hover:text-brand-brown transition-colors">{label}</span>
             </div>
-            <span className="text-[10px] lg:text-xs font-black tracking-widest text-brand-text/80">{value}</span>
+            <span className="text-[10px] lg:text-xs font-black tracking-widest text-brand-text/80 dark:text-gray-400">{value}</span>
         </div>
     );
 }

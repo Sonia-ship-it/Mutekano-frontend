@@ -1,11 +1,13 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:is(.dark *));
+
 @theme {
   --color-brand-brown: #8e5233;
   --color-brand-brown-dark: #6e3d23;
   --color-brand-text: #4a362e;
   --color-brand-bg: #e6e0dc;
-  
+
   --font-sans: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
 }
 
