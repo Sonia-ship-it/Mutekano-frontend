@@ -451,14 +451,6 @@ export default function SettingsPage() {
                                             </div>
                                         </div>
 
-                                        {/* 4. Last Activity */}
-                                        <div className="flex items-center justify-between p-6 bg-white dark:bg-[#1e1e1e] rounded-3xl border border-gray-100 dark:border-[#333] shadow-sm transition-colors">
-                                            <div>
-                                                <h4 className="font-bold text-brand-brown">{t('set_info_last')}</h4>
-                                                <p className="text-xs text-brand-text/60 dark:text-gray-400">{t('set_info_last_val')}</p>
-                                            </div>
-                                            <Clock size={18} className="text-brand-brown/40" />
-                                        </div>
 
                                         {/* 5. Storage Status */}
                                         <div className="p-6 bg-white dark:bg-[#1e1e1e] rounded-3xl border border-gray-100 dark:border-[#333] shadow-sm transition-colors">
@@ -485,13 +477,24 @@ export default function SettingsPage() {
                                     <p className="text-brand-text/60 dark:text-gray-400 font-medium text-sm mb-8">{t('set_support_desc')}</p>
 
                                     <div className="space-y-4">
-                                        {/* Phone Contact */}
+                                        {/* Phone Contact 1 */}
                                         <div className="flex items-center justify-between p-6 bg-white dark:bg-[#1e1e1e] rounded-3xl border border-gray-100 dark:border-[#333] shadow-sm transition-colors">
                                             <div>
-                                                <h4 className="font-bold text-brand-brown">{t('set_phone')}</h4>
-                                                <p className="text-xs text-brand-text/60 dark:text-gray-400">+250 795 300 840</p>
+                                                <h4 className="font-bold text-brand-brown underline decoration-brand-brown/20 uppercase text-[10px] tracking-widest mb-1">{t('set_phone')} 1</h4>
+                                                <p className="text-sm font-bold text-brand-brown">+250 795 300 840</p>
                                             </div>
                                             <a href="tel:+250795300840" className="w-10 h-10 bg-green-50 rounded-full flex items-center justify-center text-green-600 shadow-sm hover:bg-green-100 transition-colors">
+                                                <Phone size={18} />
+                                            </a>
+                                        </div>
+
+                                        {/* Phone Contact 2 */}
+                                        <div className="flex items-center justify-between p-6 bg-white dark:bg-[#1e1e1e] rounded-3xl border border-gray-100 dark:border-[#333] shadow-sm transition-colors">
+                                            <div>
+                                                <h4 className="font-bold text-brand-brown underline decoration-brand-brown/20 uppercase text-[10px] tracking-widest mb-1">{t('set_phone')} 2</h4>
+                                                <p className="text-sm font-bold text-brand-brown">+250 791 726 280</p>
+                                            </div>
+                                            <a href="tel:+250791726280" className="w-10 h-10 bg-green-50 rounded-full flex items-center justify-center text-green-600 shadow-sm hover:bg-green-100 transition-colors">
                                                 <Phone size={18} />
                                             </a>
                                         </div>
@@ -499,7 +502,7 @@ export default function SettingsPage() {
                                         {/* Email 1 */}
                                         <div className="flex items-center justify-between p-6 bg-white dark:bg-[#1e1e1e] rounded-3xl border border-gray-100 dark:border-[#333] shadow-sm transition-colors">
                                             <div>
-                                                <h4 className="font-bold text-brand-brown underline decoration-brand-brown/20 uppercase text-[10px] tracking-widest mb-1">DEV 1</h4>
+                                                <h4 className="font-bold text-brand-brown underline decoration-brand-brown/20 uppercase text-[10px] tracking-widest mb-1">{t('set_support_founder1')}</h4>
                                                 <p className="text-sm font-bold text-brand-brown">sibomanaedouard974@gmail.com</p>
                                             </div>
                                             <div className="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center text-blue-600 shadow-sm">
@@ -510,7 +513,7 @@ export default function SettingsPage() {
                                         {/* Email 2 */}
                                         <div className="flex items-center justify-between p-6 bg-white dark:bg-[#1e1e1e] rounded-3xl border border-gray-100 dark:border-[#333] shadow-sm transition-colors">
                                             <div>
-                                                <h4 className="font-bold text-brand-brown underline decoration-brand-brown/20 uppercase text-[10px] tracking-widest mb-1">DEV 2</h4>
+                                                <h4 className="font-bold text-brand-brown underline decoration-brand-brown/20 uppercase text-[10px] tracking-widest mb-1">{t('set_support_founder2')}</h4>
                                                 <p className="text-sm font-bold text-brand-brown">uwasesonia43@gmail.com</p>
                                             </div>
                                             <div className="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center text-blue-600 shadow-sm">

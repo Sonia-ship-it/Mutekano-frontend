@@ -7,9 +7,11 @@ import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2, User } from 'lucide-react
 import AuthLayout from '@/components/AuthLayout';
 import { TextInput, Button } from '@/components/ui/FormElements';
 import api from '@/lib/api';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function LoginPage() {
     const router = useRouter();
+    const { t } = useLanguage();
     const [isLoading, setIsLoading] = useState(false);
     const [errorMsg, setErrorMsg] = useState('');
     const [showPassword, setShowPassword] = useState(false);
@@ -54,11 +56,11 @@ export default function LoginPage() {
                     router.push('/dashboard');
                 }
             } else {
-                throw new Error("Kwinjira byanze, ongera ugerageze.");
+                throw new Error(t('auth_login_fail'));
             }
 
         } catch (error: any) {
-            setErrorMsg(error.message || "Habaye ikibazo, ongera ugerageze ikindi gihe.");
+            setErrorMsg(error.response?.data?.message || error.message || t('auth_error'));
         } finally {
             setIsLoading(false);
         }
@@ -66,15 +68,15 @@ export default function LoginPage() {
 
     return (
         <AuthLayout
-            subtitleBlock1="KURIKIRANA"
-            subtitleBlock2="UMUTEKANO"
-            subtitleBlock3="W'UMUTUNGO  WAWE."
+            subtitleBlock1={t('auth_sub_login_1')}
+            subtitleBlock2={t('auth_sub_login_2')}
+            subtitleBlock3={t('auth_sub_login_3')}
             formMaxWidth="600px"
         >
             <div className="flex flex-col h-full">
                 <div className="mb-8 lg:mb-10">
-                    <h2 className="text-4xl lg:text-[3rem] font-black text-brand-brown tracking-tight leading-none mb-2">Injira.</h2>
-                    <p className="text-brand-text/60 font-medium text-sm lg:text-base">Injira muri konte kugirango utangire</p>
+                    <h2 className="text-4xl lg:text-[3rem] font-black text-brand-brown tracking-tight leading-none mb-2">{t('auth_login_title')}</h2>
+                    <p className="text-brand-text/60 font-medium text-sm lg:text-base">{t('auth_login_subtitle')}</p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="flex-1 flex flex-col pt-2 border-t border-brand-text/5">
@@ -85,9 +87,9 @@ export default function LoginPage() {
                     )}
                     <TextInput
                         name="identifier"
-                        label="Imeri cyangwa nomero ya telefone"
+                        label={t('auth_email_label')}
                         type="text"
-                        placeholder="izina@urubuga.rw cyangwa 07..."
+                        placeholder={t('auth_email_placeholder')}
                         required
                         icon={User}
                         value={formData.identifier}
@@ -97,8 +99,8 @@ export default function LoginPage() {
 
                     <TextInput
                         name="password"
-                        label="Ijambo ry'ibanga"
-                        rightLabel={<Link href="/forgot-password" className="text-[10px] font-bold text-brand-brown tracking-widest uppercase hover:underline underline-offset-4">WIBAGIWE?</Link>}
+                        label={t('auth_password_label')}
+                        rightLabel={<Link href="/forgot-password" className="text-[10px] font-bold text-brand-brown tracking-widest uppercase hover:underline underline-offset-4">{t('auth_forgot_link')}</Link>}
                         type={showPassword ? "text" : "password"}
                         placeholder="........"
                         required
@@ -114,7 +116,7 @@ export default function LoginPage() {
                     />
 
                     <Button type="submit" disabled={isLoading} rightIcon={isLoading ? <Loader2 size={18} className="animate-spin" /> : <ArrowRight size={18} />}>
-                        {isLoading ? "KWINJIRA..." : "INJIRA MURI KONTI?"}
+                        {isLoading ? t('auth_login_loading') : t('auth_login_btn')}
                     </Button>
 
                     {/* <div className="my-6 lg:my-8 border-t border-brand-text/10 w-full relative">
@@ -130,7 +132,7 @@ export default function LoginPage() {
                     </Button> */}
 
                     <div className="mt-8 lg:mt-10 text-center text-[10px] lg:text-xs font-bold text-brand-text/60 tracking-widest uppercase">
-                        NTABWO UFITE KONTI? <Link href="/register" className="text-brand-brown hover:underline underline-offset-4">Iyandikishe</Link>
+                        {t('auth_no_account')} <Link href="/register" className="text-brand-brown hover:underline underline-offset-4">{t('auth_register_link')}</Link>
                     </div>
                 </form>
             </div>

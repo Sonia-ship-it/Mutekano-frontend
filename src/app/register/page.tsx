@@ -7,9 +7,11 @@ import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2, User, Phone } from 'lucid
 import AuthLayout from '@/components/AuthLayout';
 import { TextInput, Button } from '@/components/ui/FormElements';
 import api from '@/lib/api';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function RegisterPage() {
     const router = useRouter();
+    const { t } = useLanguage();
     const [isLoading, setIsLoading] = useState(false);
     const [errorMsg, setErrorMsg] = useState('');
     const [showPassword, setShowPassword] = useState(false);
@@ -50,11 +52,11 @@ export default function RegisterPage() {
             if (data.success) {
                 router.push('/login');
             } else {
-                throw new Error("Habaye ikibazo mugufungura konti. Ongera ugerageze.");
+                throw new Error(t('auth_reg_fail'));
             }
 
         } catch (error: any) {
-            setErrorMsg(error.message || "Kwiyandikisha byanze. Kanda wiyandikishe bundi bushya.");
+            setErrorMsg(error.response?.data?.message || error.message || t('auth_reg_error'));
         } finally {
             setIsLoading(false);
         }
@@ -62,15 +64,15 @@ export default function RegisterPage() {
 
     return (
         <AuthLayout
-            subtitleBlock1="KURIKIRANA"
-            subtitleBlock2="URUGO"
-            subtitleBlock3="AHO URI HOSE"
+            subtitleBlock1={t('auth_sub_reg_1')}
+            subtitleBlock2={t('auth_sub_reg_2')}
+            subtitleBlock3={t('auth_sub_reg_3')}
             formMaxWidth="600px"
         >
             <div className="flex flex-col h-full">
                 <div className="mb-6">
-                    <h2 className="text-3xl lg:text-[2.5rem] font-black text-brand-brown tracking-tight leading-none mb-1">Fungura konti</h2>
-                    <p className="text-brand-text/60 font-medium text-sm lg:text-base">Iyandikishe maze ufungure konti.</p>
+                    <h2 className="text-3xl lg:text-[2.5rem] font-black text-brand-brown tracking-tight leading-none mb-1">{t('auth_reg_title')}</h2>
+                    <p className="text-brand-text/60 font-medium text-sm lg:text-base">{t('auth_reg_subtitle')}</p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="flex-1 flex flex-col pt-2 border-t border-brand-text/5">
@@ -81,10 +83,10 @@ export default function RegisterPage() {
                     )}
                     <TextInput
                         name="fullNames"
-                        label="Amazina"
+                        label={t('auth_name_label')}
                         type="text"
                         required
-                        placeholder="Izina ryawe ryuzuye"
+                        placeholder={t('auth_name_placeholder')}
                         icon={User}
                         value={formData.fullNames}
                         onChange={handleChange}
@@ -93,10 +95,10 @@ export default function RegisterPage() {
 
                     <TextInput
                         name="email"
-                        label="Imeri"
+                        label={t('auth_email_only_label')}
                         type="email"
                         required
-                        placeholder="izina@urubuga.rw"
+                        placeholder={t('auth_email_only_placeholder')}
                         icon={Mail}
                         value={formData.email}
                         onChange={handleChange}
@@ -105,7 +107,7 @@ export default function RegisterPage() {
 
                     <TextInput
                         name="phoneNumber"
-                        label="Nomero ya telefone"
+                        label={t('auth_phone_label')}
                         type="tel"
                         required
                         placeholder="07..."
@@ -117,7 +119,7 @@ export default function RegisterPage() {
 
                     <TextInput
                         name="password"
-                        label="Ijambo ry'ibanga"
+                        label={t('auth_password_label')}
                         type={showPassword ? "text" : "password"}
                         required
                         placeholder="........"
@@ -133,7 +135,7 @@ export default function RegisterPage() {
                     />
 
                     <Button type="submit" disabled={isLoading} rightIcon={isLoading ? <Loader2 size={18} className="animate-spin" /> : <ArrowRight size={18} />}>
-                        {isLoading ? "IYANDIKISHE..." : "INJIRA MURI KONTI?"}
+                        {isLoading ? t('auth_reg_loading') : t('auth_reg_btn')}
                     </Button>
 
                     {/* <div className="my-4 border-t border-brand-text/10 w-full relative">
@@ -149,7 +151,7 @@ export default function RegisterPage() {
                     </Button> */}
 
                     <div className="mt-4 text-center text-[10px] lg:text-xs font-bold text-brand-text/60 tracking-widest uppercase">
-                        USANZWE UFITE KONTI? <Link href="/login" className="text-brand-brown hover:underline underline-offset-4">INJIRA</Link>
+                        {t('auth_has_account')} <Link href="/login" className="text-brand-brown hover:underline underline-offset-4">{t('auth_login_link')}</Link>
                     </div>
                 </form>
             </div>

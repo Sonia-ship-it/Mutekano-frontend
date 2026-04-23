@@ -7,8 +7,10 @@ import AuthLayout from '@/components/AuthLayout';
 import { TextInput, Button } from '@/components/ui/FormElements';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '@/lib/api';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function ForgotPasswordPage() {
+    const { t } = useLanguage();
     const [email, setEmail] = React.useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isSent, setIsSent] = useState(false);
@@ -22,7 +24,7 @@ export default function ForgotPasswordPage() {
             await api.post('/auth/forgot-password', { email });
             setIsSent(true);
         } catch (error: any) {
-            setErrorMsg(error.message || 'Habaye ikibazo, ongera ugerageze.');
+            setErrorMsg(error.response?.data?.message || error.message || t('auth_error'));
         } finally {
             setIsLoading(false);
         }
@@ -30,9 +32,9 @@ export default function ForgotPasswordPage() {
 
     return (
         <AuthLayout
-            subtitleBlock1="HINDURA"
-            subtitleBlock2="IJAMBO"
-            subtitleBlock3="RY'IBANGA."
+            subtitleBlock1={t('auth_sub_for_1')}
+            subtitleBlock2={t('auth_sub_for_2')}
+            subtitleBlock3={t('auth_sub_for_3')}
             formMaxWidth="600px"
         >
             <div className="flex flex-col h-full">
@@ -47,19 +49,19 @@ export default function ForgotPasswordPage() {
                         >
                             <div className="mb-8 lg:mb-10">
                                 <h2 className="text-3xl lg:text-[2.5rem] font-black text-brand-brown tracking-tight leading-none mb-2">
-                                    Wibagiwe?
+                                    {t('auth_forgot_title')}
                                 </h2>
                                 <p className="text-brand-text/60 font-medium text-sm lg:text-base">
-                                    Andika imeri yawe tuguohereze uburyo bwo guhindura ijambo ry&apos;ibanga.
+                                    {t('auth_forgot_subtitle')}
                                 </p>
                             </div>
 
                             <form onSubmit={handleSubmit} className="flex-1 flex flex-col pt-2 border-t border-brand-text/5">
                                 <TextInput
-                                    label="Imeri"
+                                    label={t('auth_email_only_label')}
                                     type="email"
                                     required
-                                    placeholder="izina@urubuga.rw"
+                                    placeholder={t('auth_email_only_placeholder')}
                                     icon={Mail}
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
@@ -75,7 +77,7 @@ export default function ForgotPasswordPage() {
                                     disabled={isLoading}
                                     rightIcon={isLoading ? <Loader2 size={18} className="animate-spin" /> : <ArrowRight size={18} />}
                                 >
-                                    {isLoading ? "KOHEREZA..." : "OHEREZA LINK"}
+                                    {isLoading ? t('auth_forgot_loading') : t('auth_forgot_btn')}
                                 </Button>
                             </form>
 
@@ -85,7 +87,7 @@ export default function ForgotPasswordPage() {
                                     className="inline-flex items-center gap-2 text-[10px] lg:text-xs font-bold text-brand-text/60 tracking-widest uppercase hover:text-brand-brown transition-colors"
                                 >
                                     <ArrowLeft size={14} />
-                                    SUBIRA KWINJIRA
+                                    {t('auth_forgot_back')}
                                 </Link>
                             </div>
                         </motion.div>
@@ -108,15 +110,15 @@ export default function ForgotPasswordPage() {
                             </div>
 
                             <h2 className="text-2xl lg:text-3xl font-black text-brand-brown tracking-tight mb-3">
-                                Yoherejwe!
+                                {t('auth_forgot_success_title')}
                             </h2>
                             <p className="text-brand-text/60 font-medium text-sm lg:text-base max-w-xs mb-8 lg:mb-10">
-                                Reba imeri yawe kugirango ubone link yo guhindura ijambo ry&apos;ibanga.
+                                {t('auth_forgot_success_subtitle')}
                             </p>
 
                             <Link href="/login" className="w-full">
                                 <Button type="button" rightIcon={<ArrowRight size={18} />}>
-                                    SUBIRA KWINJIRA
+                                    {t('auth_forgot_back')}
                                 </Button>
                             </Link>
                         </motion.div>

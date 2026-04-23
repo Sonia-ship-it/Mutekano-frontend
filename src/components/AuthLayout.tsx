@@ -3,6 +3,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Shield } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface AuthLayoutProps {
     children: React.ReactNode;
@@ -14,11 +15,13 @@ interface AuthLayoutProps {
 
 export default function AuthLayout({
     children,
-    subtitleBlock1 = "GUKURIKIRANA",
-    subtitleBlock2 = "URUGO",
-    subtitleBlock3 = "AHO URI HOSE",
+    subtitleBlock1,
+    subtitleBlock2,
+    subtitleBlock3,
     formMaxWidth = "560px"
 }: AuthLayoutProps) {
+    const { t } = useLanguage();
+
     return (
         <div className="relative min-h-screen w-full overflow-hidden flex items-center justify-center">
             {/* Background Image with slight blur for depth */}
@@ -58,18 +61,18 @@ export default function AuthLayout({
                     {/* Giant typography block */}
                     <div className="flex flex-col leading-none mb-6 lg:mb-8">
                         <span className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-[5.5rem] font-black text-brand-brown tracking-tighter leading-[0.85]">
-                            {subtitleBlock1}
+                            {subtitleBlock1 || t('auth_sub_login_1')}
                         </span>
                         <span className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-[5.5rem] font-black text-white tracking-tighter leading-[0.9]" style={{ textShadow: '0 2px 20px rgba(0,0,0,0.08)' }}>
-                            {subtitleBlock2}
+                            {subtitleBlock2 || t('auth_sub_login_2')}
                         </span>
                         <span className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-[5.5rem] font-black text-white/40 tracking-tighter leading-[0.85] mix-blend-overlay">
-                            {subtitleBlock3}
+                            {subtitleBlock3 || t('auth_sub_login_3')}
                         </span>
                     </div>
 
                     <p className="text-brand-text/70 text-sm sm:text-base lg:text-lg max-w-md mx-auto lg:mx-0 font-medium leading-relaxed mb-8 lg:mb-10">
-                        Rinda umutungo wawe ukoresheje Ikoranabuhanga Rigezweho kandi Ryizewe .
+                        {t('auth_layout_desc')}
                     </p>
 
                     {/* Stats */}
@@ -80,9 +83,9 @@ export default function AuthLayout({
                         className="hidden sm:flex gap-6 lg:gap-10 justify-center lg:justify-start"
                     >
                         {[
-                            { label: "Igihe", value: "24/7" },
-                            { label: "Umutekano", value: "100%" },
-                            { label: "Ikoranabuhanga", value: "AI+" },
+                            { label: t('auth_layout_time'), value: "24/7" },
+                            { label: t('auth_layout_sec'), value: "100%" },
+                            { label: t('auth_layout_tech'), value: "AI+" },
                         ].map((stat) => (
                             <div key={stat.label} className="flex flex-col items-center lg:items-start">
                                 <span className="text-[9px] lg:text-[10px] font-bold text-brand-text/50 tracking-[0.2em] uppercase mb-1">{stat.label}</span>
